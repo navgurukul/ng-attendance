@@ -48,14 +48,18 @@ export default function StudentDashboard() {
       .eq('status', 'approved');
     
     const leaves = leaveData?.length || 0;
-    const totalDays = 30; // Mock total working days
     
-    // Calculate absent days: days with no attendance, no kitchen duty, and no approved leave
+    // Calculate elapsed days from start of current month to today
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const elapsedDays = Math.floor((now.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Calculate absent days: elapsed days with no attendance, no kitchen duty, and no approved leave
     const daysWithRecord = present + kitchenDuty + leaves;
-    const absent = totalDays - daysWithRecord;
+    const absent = Math.max(0, elapsedDays - daysWithRecord);
     
-    // Attendance percentage based only on days present
-    const percentage = totalDays > 0 ? Math.round((present / totalDays) * 100) : 0;
+    // Attendance percentage based only on days present out of elapsed days
+    const percentage = elapsedDays > 0 ? Math.round((present / elapsedDays) * 100) : 0;
 
     setStats({ present, absent, leaves, kitchenDuty, percentage });
   };
