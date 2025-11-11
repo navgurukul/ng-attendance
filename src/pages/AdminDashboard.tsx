@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { QRCodeSVG } from "qrcode.react";
+import { z } from "zod";
 
 interface LeaveRequest {
   id: string;
@@ -19,12 +20,26 @@ interface LeaveRequest {
   };
 }
 
+interface StudentRecord {
+  id: string;
+  full_name: string;
+  email: string;
+  roll_number: string | null;
+  department: string | null;
+  total_days: number;
+  present_days: number;
+  attendance_rate: number;
+}
+
+const searchQuerySchema = z.string().max(100, "Search query too long");
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [qrCode, setQrCode] = useState<string>("");
   const [qrExpiry, setQrExpiry] = useState<string>("");
   const [pendingLeaves, setPendingLeaves] = useState<LeaveRequest[]>([]);
+  const [studentRecords, setStudentRecords] = useState<StudentRecord[]>([]);
   const [stats, setStats] = useState({
     present: 0,
     absent: 0,
@@ -34,11 +49,13 @@ export default function AdminDashboard() {
     emergencyLeave: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [studentsLoading, setStudentsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
       fetchPendingLeaves();
+      fetchStudentRecords();
     }
   }, [user]);
 
@@ -88,8 +105,6 @@ export default function AdminDashboard() {
   };
 
   const fetchPendingLeaves = async () => {
-    console.log('Fetching pending leaves...');
-    
     const { data, error } = await supabase
       .from('leave_requests')
       .select(`
@@ -101,8 +116,6 @@ export default function AdminDashboard() {
       .eq('status', 'pending')
       .order('requested_at', { ascending: false });
 
-    console.log('Leave requests result:', { data, error });
-
     if (error) {
       console.error('Error fetching leave requests:', error);
       toast.error(`Failed to fetch leave requests: ${error.message}`);
@@ -110,9 +123,56 @@ export default function AdminDashboard() {
     }
 
     if (data) {
-      console.log(`Found ${data.length} pending leave requests`);
       setPendingLeaves(data as any);
     }
+  };
+
+  const fetchStudentRecords = async () => {
+    setStudentsLoading(true);
+    
+    // Fetch all student profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('full_name');
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      toast.error('Failed to fetch student records');
+      setStudentsLoading(false);
+      return;
+    }
+
+    // Fetch all attendance records
+    const { data: attendance, error: attendanceError } = await supabase
+      .from('attendance_records')
+      .select('student_id, status');
+
+    if (attendanceError) {
+      console.error('Error fetching attendance:', attendanceError);
+    }
+
+    // Calculate attendance stats for each student
+    const records: StudentRecord[] = (profiles || []).map(profile => {
+      const studentAttendance = attendance?.filter(a => a.student_id === profile.id) || [];
+      const presentDays = studentAttendance.filter(a => a.status === 'present').length;
+      const totalDays = studentAttendance.length;
+      const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+
+      return {
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        roll_number: profile.roll_number,
+        department: profile.department,
+        total_days: totalDays,
+        present_days: presentDays,
+        attendance_rate: Math.round(attendanceRate),
+      };
+    });
+
+    setStudentRecords(records);
+    setStudentsLoading(false);
   };
 
   const handleGenerateQR = async () => {
@@ -193,6 +253,25 @@ export default function AdminDashboard() {
   const handleExportReport = () => {
     toast.info("Report export feature coming soon!");
   };
+
+  const handleSearchChange = (value: string) => {
+    const result = searchQuerySchema.safeParse(value);
+    if (result.success) {
+      setSearchQuery(value);
+    }
+  };
+
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) return studentRecords;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return studentRecords.filter(student => 
+      student.full_name.toLowerCase().includes(query) ||
+      student.email.toLowerCase().includes(query) ||
+      student.roll_number?.toLowerCase().includes(query) ||
+      student.department?.toLowerCase().includes(query)
+    );
+  }, [searchQuery, studentRecords]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -341,16 +420,61 @@ export default function AdminDashboard() {
 
           <div className="mb-4">
             <Input
-              placeholder="Search students by name or ID..."
+              placeholder="Search students by name, email, roll number, or department..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="border-[3px] border-foreground h-12 shadow-brutal-sm"
             />
           </div>
 
-          <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
-            <p className="text-muted-foreground">Student search and records view coming soon!</p>
-          </div>
+          {studentsLoading ? (
+            <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
+              <p className="text-muted-foreground">Loading student records...</p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No students found matching your search' : 'No student records available'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto border-[3px] border-foreground">
+              <table className="w-full">
+                <thead className="bg-primary text-primary-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Name</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Roll Number</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Department</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Email</th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-r-[3px] border-foreground">Present Days</th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-foreground">Attendance %</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-background">
+                  {filteredStudents.map((student, index) => (
+                    <tr key={student.id} className={index % 2 === 0 ? 'bg-background' : 'bg-muted'}>
+                      <td className="px-4 py-3 font-medium border-r-[3px] border-foreground">{student.full_name}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.roll_number || '-'}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.department || '-'}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground text-sm">{student.email}</td>
+                      <td className="px-4 py-3 text-center font-bold border-r-[3px] border-foreground">
+                        {student.present_days}/{student.total_days}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`font-bold ${
+                          student.attendance_rate >= 75 ? 'text-green-600' :
+                          student.attendance_rate >= 50 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {student.attendance_rate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Reports & Lifecycle */}
