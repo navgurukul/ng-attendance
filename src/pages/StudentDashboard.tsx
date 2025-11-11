@@ -14,7 +14,7 @@ export default function StudentDashboard() {
   const [leaveType, setLeaveType] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
   const [todayMarked, setTodayMarked] = useState(false);
-  const [stats, setStats] = useState({ present: 0, absent: 0, leaves: 0, percentage: 0 });
+  const [stats, setStats] = useState({ present: 0, absent: 0, leaves: 0, kitchenDuty: 0, percentage: 0 });
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
 
@@ -40,7 +40,6 @@ export default function StudentDashboard() {
 
     const present = data?.filter(r => r.status === 'present').length || 0;
     const kitchenDuty = data?.filter(r => r.status === 'kitchen_duty').length || 0;
-    const total = present + kitchenDuty;
     
     const { data: leaveData } = await supabase
       .from('leave_requests')
@@ -50,9 +49,15 @@ export default function StudentDashboard() {
     
     const leaves = leaveData?.length || 0;
     const totalDays = 30; // Mock total working days
-    const percentage = totalDays > 0 ? Math.round((total / totalDays) * 100) : 0;
+    
+    // Calculate absent days: days with no attendance, no kitchen duty, and no approved leave
+    const daysWithRecord = present + kitchenDuty + leaves;
+    const absent = totalDays - daysWithRecord;
+    
+    // Attendance percentage based only on days present
+    const percentage = totalDays > 0 ? Math.round((present / totalDays) * 100) : 0;
 
-    setStats({ present: total, absent: totalDays - total - leaves, leaves, percentage });
+    setStats({ present, absent, leaves, kitchenDuty, percentage });
   };
 
   const checkTodayAttendance = async () => {
@@ -209,10 +214,14 @@ export default function StudentDashboard() {
         </div>
 
         {/* Attendance Overview */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-3xl font-bold mb-1">{stats.present}</div>
             <div className="text-sm text-muted-foreground">Days Present</div>
+          </Card>
+          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-3xl font-bold mb-1">{stats.kitchenDuty}</div>
+            <div className="text-sm text-muted-foreground">Kitchen Duty</div>
           </Card>
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-3xl font-bold mb-1">{stats.absent}</div>
