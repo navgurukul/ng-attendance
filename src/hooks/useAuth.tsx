@@ -93,7 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut({ scope: 'local' });
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      // Ignore session errors during logout
+      console.log('Logged out locally');
+    }
     setRole(null);
     navigate('/');
   };
