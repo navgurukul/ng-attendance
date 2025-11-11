@@ -6,20 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { GraduationCap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
-interface SignupProps {
-  onSignup: () => void;
-}
-
-export default function Signup({ onSignup }: SignupProps) {
+export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
@@ -34,13 +32,16 @@ export default function Signup({ onSignup }: SignupProps) {
 
     setLoading(true);
 
-    // Mock signup logic
-    setTimeout(() => {
-      onSignup();
-      toast.success("Account created successfully!");
+    const { error } = await signUp(email, password, name);
+    
+    if (error) {
+      toast.error(error.message || "Failed to create account");
+    } else {
+      toast.success("Account created! Check your email to verify.");
       navigate("/login");
-      setLoading(false);
-    }, 1000);
+    }
+    
+    setLoading(false);
   };
 
   return (

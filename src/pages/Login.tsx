@@ -1,39 +1,32 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { GraduationCap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
-interface LoginProps {
-  onLogin: (role: 'student' | 'admin') => void;
-}
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock authentication logic
-    setTimeout(() => {
-      if (email && password) {
-        // Simple check: admin@example.com is admin, others are students
-        const role = email === "admin@example.com" ? "admin" : "student";
-        onLogin(role);
-        toast.success("Login successful!");
-        navigate(role === "admin" ? "/admin" : "/dashboard");
-      } else {
-        toast.error("Please enter valid credentials");
-      }
-      setLoading(false);
-    }, 1000);
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      toast.error(error.message || "Failed to log in");
+    } else {
+      toast.success("Logged in successfully!");
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -92,9 +85,9 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
         <div className="mt-4 p-4 bg-muted border-[3px] border-foreground">
-          <p className="text-xs font-bold mb-1">Demo Credentials:</p>
-          <p className="text-xs">Student: any email + any password</p>
-          <p className="text-xs">Admin: admin@example.com + any password</p>
+          <p className="text-xs font-bold mb-2">Getting Started:</p>
+          <p className="text-xs mb-1">1. Sign up to create an account (student by default)</p>
+          <p className="text-xs">2. Admins must be assigned via Supabase dashboard</p>
         </div>
       </Card>
     </div>
