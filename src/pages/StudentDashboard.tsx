@@ -1,46 +1,196 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { QrCode, Calendar, ClipboardList, ChefHat, AlertCircle } from "lucide-react";
+import { QrCode, Calendar, ClipboardList, ChefHat, AlertCircle, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function StudentDashboard() {
+  const { user } = useAuth();
   const [leaveType, setLeaveType] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
-
   const [todayMarked, setTodayMarked] = useState(false);
+  const [stats, setStats] = useState({ present: 0, absent: 0, leaves: 0, percentage: 0 });
+  const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
-  const handleQRScan = () => {
-    setTodayMarked(true);
-    toast.success("Attendance marked for today!");
+  useEffect(() => {
+    if (user) {
+      fetchAttendanceData();
+      checkTodayAttendance();
+    }
+  }, [user]);
+
+  const fetchAttendanceData = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('student_id', user.id);
+
+    if (error) {
+      console.error('Error fetching attendance:', error);
+      return;
+    }
+
+    const present = data?.filter(r => r.status === 'present').length || 0;
+    const kitchenDuty = data?.filter(r => r.status === 'kitchen_duty').length || 0;
+    const total = present + kitchenDuty;
+    
+    const { data: leaveData } = await supabase
+      .from('leave_requests')
+      .select('*')
+      .eq('student_id', user.id)
+      .eq('status', 'approved');
+    
+    const leaves = leaveData?.length || 0;
+    const totalDays = 30; // Mock total working days
+    const percentage = totalDays > 0 ? Math.round((total / totalDays) * 100) : 0;
+
+    setStats({ present: total, absent: totalDays - total - leaves, leaves, percentage });
   };
 
-  const handleKitchenDuty = () => {
-    setTodayMarked(true);
-    toast.success("Kitchen duty marked! Attendance credited for today.");
+  const checkTodayAttendance = async () => {
+    if (!user) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('student_id', user.id)
+      .eq('attendance_date', today)
+      .maybeSingle();
+
+    setTodayMarked(!!data);
   };
 
-  const handleLeaveSubmit = (e: React.FormEvent) => {
+  const startQRScanner = () => {
+    setScanning(true);
+    
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "qr-reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+    async function onScanSuccess(decodedText: string) {
+      html5QrcodeScanner.clear();
+      setScanning(false);
+      await handleQRScan(decodedText);
+    }
+
+    function onScanFailure(error: any) {
+      console.warn(`QR scan error: ${error}`);
+    }
+  };
+
+  const handleQRScan = async (qrCode: string) => {
+    if (!user) return;
+
+    setLoading(true);
+    
+    // Verify QR code is valid and active
+    const { data: qrData, error: qrError } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('code', qrCode)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (qrError || !qrData) {
+      toast.error("Invalid or expired QR code");
+      setLoading(false);
+      return;
+    }
+
+    // Check if QR code has expired
+    if (new Date(qrData.expires_at) < new Date()) {
+      toast.error("QR code has expired");
+      setLoading(false);
+      return;
+    }
+
+    // Mark attendance
+    const { error } = await supabase
+      .from('attendance_records')
+      .insert({
+        student_id: user.id,
+        qr_code_id: qrData.id,
+        status: 'present'
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.error("Attendance already marked for today");
+      } else {
+        toast.error("Failed to mark attendance");
+      }
+    } else {
+      toast.success("Attendance marked successfully!");
+      setTodayMarked(true);
+      fetchAttendanceData();
+    }
+
+    setLoading(false);
+  };
+
+  const handleKitchenDuty = async () => {
+    if (!user) return;
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from('attendance_records')
+      .insert({
+        student_id: user.id,
+        status: 'kitchen_duty'
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.error("Attendance already marked for today");
+      } else {
+        toast.error("Failed to mark kitchen duty");
+      }
+    } else {
+      toast.success("Kitchen duty marked! Attendance credited.");
+      setTodayMarked(true);
+      fetchAttendanceData();
+    }
+
+    setLoading(false);
+  };
+
+  const handleLeaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (leaveType && leaveReason) {
+    if (!user || !leaveType || !leaveReason) return;
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .insert({
+        student_id: user.id,
+        leave_type: leaveType,
+        reason: leaveReason
+      });
+
+    if (error) {
+      toast.error("Failed to submit leave request");
+    } else {
       toast.success("Leave request submitted for approval");
       setLeaveType("");
       setLeaveReason("");
     }
-  };
 
-  const handleCorrectionRequest = () => {
-    toast.info("Correction request feature coming soon!");
-  };
-
-  const attendanceStats = {
-    present: 18,
-    absent: 2,
-    leaves: 3,
-    percentage: 90,
+    setLoading(false);
   };
 
   return (
@@ -54,19 +204,19 @@ export default function StudentDashboard() {
         {/* Attendance Overview */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-3xl font-bold mb-1">{attendanceStats.present}</div>
+            <div className="text-3xl font-bold mb-1">{stats.present}</div>
             <div className="text-sm text-muted-foreground">Days Present</div>
           </Card>
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-3xl font-bold mb-1">{attendanceStats.absent}</div>
+            <div className="text-3xl font-bold mb-1">{stats.absent}</div>
             <div className="text-sm text-muted-foreground">Days Absent</div>
           </Card>
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-3xl font-bold mb-1">{attendanceStats.leaves}</div>
+            <div className="text-3xl font-bold mb-1">{stats.leaves}</div>
             <div className="text-sm text-muted-foreground">Leaves Taken</div>
           </Card>
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground">
-            <div className="text-3xl font-bold mb-1">{attendanceStats.percentage}%</div>
+            <div className="text-3xl font-bold mb-1">{stats.percentage}%</div>
             <div className="text-sm">Attendance Rate</div>
           </Card>
         </div>
@@ -92,16 +242,24 @@ export default function StudentDashboard() {
                 
                 {!todayMarked ? (
                   <div className="space-y-4">
-                    <div className="w-48 h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
-                      <QrCode className="h-32 w-32 text-muted-foreground" />
-                    </div>
-                    <Button 
-                      size="lg" 
-                      onClick={handleQRScan}
-                      className="w-full"
-                    >
-                      Scan QR Code
-                    </Button>
+                    {!scanning ? (
+                      <>
+                        <div className="w-48 h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
+                          <Camera className="h-32 w-32 text-muted-foreground" />
+                        </div>
+                        <Button 
+                          size="lg" 
+                          onClick={startQRScanner}
+                          className="w-full"
+                          disabled={loading}
+                        >
+                          <QrCode className="mr-2 h-5 w-5" />
+                          Scan QR Code
+                        </Button>
+                      </>
+                    ) : (
+                      <div id="qr-reader" className="w-full"></div>
+                    )}
                   </div>
                 ) : (
                   <div className="py-8">
@@ -121,7 +279,12 @@ export default function StudentDashboard() {
                 <ChefHat className="h-5 w-5" />
                 <span className="font-bold">Kitchen Duty Today?</span>
               </div>
-              <Button onClick={handleKitchenDuty} variant="outline" className="w-full">
+              <Button 
+                onClick={handleKitchenDuty} 
+                variant="outline" 
+                className="w-full"
+                disabled={loading || todayMarked}
+              >
                 Mark Kitchen Duty
               </Button>
             </div>
@@ -148,7 +311,7 @@ export default function StudentDashboard() {
                 >
                   <option value="">Select leave type</option>
                   <option value="sick">Sick Leave</option>
-                  <option value="casual">Casual Leave</option>
+                  <option value="personal">Personal Leave</option>
                   <option value="emergency">Emergency Leave</option>
                   <option value="other">Other</option>
                 </select>
@@ -166,8 +329,8 @@ export default function StudentDashboard() {
                 />
               </div>
 
-              <Button type="submit" className="w-full">
-                Submit Leave Request
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Submitting..." : "Submit Leave Request"}
               </Button>
             </form>
 
@@ -177,11 +340,8 @@ export default function StudentDashboard() {
                 <span className="font-bold">Missed a Scan?</span>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Submit a correction request if you forgot to scan QR code.
+                Contact admin to request attendance correction.
               </p>
-              <Button onClick={handleCorrectionRequest} variant="outline" size="sm" className="w-full">
-                Request Correction
-              </Button>
             </div>
           </Card>
         </div>

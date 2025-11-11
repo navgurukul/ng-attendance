@@ -1,44 +1,187 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, CheckCircle, XCircle, Calendar, QrCode, Download, UserPlus } from "lucide-react";
+import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, UserPlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { QRCodeSVG } from "qrcode.react";
+
+interface LeaveRequest {
+  id: string;
+  student_id: string;
+  leave_type: string;
+  reason: string;
+  requested_at: string;
+  profiles: {
+    full_name: string;
+  };
+}
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [qrCode, setQrCode] = useState<string>("");
+  const [qrExpiry, setQrExpiry] = useState<string>("");
+  const [pendingLeaves, setPendingLeaves] = useState<LeaveRequest[]>([]);
+  const [stats, setStats] = useState({
+    present: 0,
+    absent: 0,
+    kitchen: 0,
+    sickLeave: 0,
+    personalLeave: 0,
+    emergencyLeave: 0,
+  });
+  const [loading, setLoading] = useState(false);
 
-  const handleGenerateQR = () => {
-    toast.success("Daily QR Code generated successfully!");
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+      fetchPendingLeaves();
+    }
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Fetch today's attendance
+    const { data: attendanceData } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('attendance_date', today);
+
+    const present = attendanceData?.filter(r => r.status === 'present').length || 0;
+    const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
+
+    // Fetch leave stats
+    const { data: leaveData } = await supabase
+      .from('leave_requests')
+      .select('*')
+      .eq('status', 'approved');
+
+    const sickLeave = leaveData?.filter(l => l.leave_type === 'sick').length || 0;
+    const personalLeave = leaveData?.filter(l => l.leave_type === 'personal').length || 0;
+    const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
+
+    setStats({
+      present,
+      absent: 0, // Calculate based on total students
+      kitchen,
+      sickLeave,
+      personalLeave,
+      emergencyLeave,
+    });
+
+    // Check if QR code exists for today
+    const { data: qrData } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('attendance_date', today)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (qrData) {
+      setQrCode(qrData.code);
+      setQrExpiry(qrData.expires_at);
+    }
   };
 
-  const handleApproveLeave = (studentName: string) => {
-    toast.success(`Leave approved for ${studentName}`);
+  const fetchPendingLeaves = async () => {
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select(`
+        *,
+        profiles:student_id (
+          full_name
+        )
+      `)
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: false });
+
+    if (!error && data) {
+      setPendingLeaves(data as any);
+    }
   };
 
-  const handleRejectLeave = (studentName: string) => {
-    toast.error(`Leave rejected for ${studentName}`);
+  const handleGenerateQR = async () => {
+    if (!user) return;
+
+    setLoading(true);
+
+    // Deactivate old QR codes
+    await supabase
+      .from('qr_codes')
+      .update({ is_active: false })
+      .eq('is_active', true);
+
+    // Generate new QR code
+    const code = `ATT-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // Valid for 24 hours
+
+    const { error } = await supabase
+      .from('qr_codes')
+      .insert({
+        code,
+        generated_by: user.id,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (error) {
+      toast.error("Failed to generate QR code");
+    } else {
+      setQrCode(code);
+      setQrExpiry(expiresAt.toISOString());
+      toast.success("Daily QR Code generated successfully!");
+    }
+
+    setLoading(false);
+  };
+
+  const handleApproveLeave = async (leaveId: string, studentName: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({
+        status: 'approved',
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', leaveId);
+
+    if (error) {
+      toast.error("Failed to approve leave");
+    } else {
+      toast.success(`Leave approved for ${studentName}`);
+      fetchPendingLeaves();
+    }
+  };
+
+  const handleRejectLeave = async (leaveId: string, studentName: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({
+        status: 'rejected',
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', leaveId);
+
+    if (error) {
+      toast.error("Failed to reject leave");
+    } else {
+      toast.error(`Leave rejected for ${studentName}`);
+      fetchPendingLeaves();
+    }
   };
 
   const handleExportReport = () => {
     toast.info("Report export feature coming soon!");
   };
-
-  // Mock data
-  const overviewStats = {
-    present: 145,
-    absent: 12,
-    kitchen: 8,
-    sickLeave: 5,
-    casualLeave: 3,
-    emergencyLeave: 1,
-  };
-
-  const pendingLeaves = [
-    { id: 1, name: "Priya Sharma", type: "Sick Leave", date: "2025-11-12", reason: "Fever and cold" },
-    { id: 2, name: "Rahul Kumar", type: "Casual Leave", date: "2025-11-13", reason: "Family function" },
-    { id: 3, name: "Anjali Patel", type: "Emergency", date: "2025-11-12", reason: "Medical emergency" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,27 +194,27 @@ export default function AdminDashboard() {
         {/* Overview Cards */}
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground">
-            <div className="text-2xl font-bold mb-1">{overviewStats.present}</div>
+            <div className="text-2xl font-bold mb-1">{stats.present}</div>
             <div className="text-sm">Present Today</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{overviewStats.absent}</div>
+            <div className="text-2xl font-bold mb-1">{stats.absent}</div>
             <div className="text-sm text-muted-foreground">Absent</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{overviewStats.kitchen}</div>
+            <div className="text-2xl font-bold mb-1">{stats.kitchen}</div>
             <div className="text-sm text-muted-foreground">Kitchen Duty</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{overviewStats.sickLeave}</div>
+            <div className="text-2xl font-bold mb-1">{stats.sickLeave}</div>
             <div className="text-sm text-muted-foreground">Sick Leave</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{overviewStats.casualLeave}</div>
-            <div className="text-sm text-muted-foreground">Casual Leave</div>
+            <div className="text-2xl font-bold mb-1">{stats.personalLeave}</div>
+            <div className="text-sm text-muted-foreground">Personal Leave</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{overviewStats.emergencyLeave}</div>
+            <div className="text-2xl font-bold mb-1">{stats.emergencyLeave}</div>
             <div className="text-sm text-muted-foreground">Emergency</div>
           </Card>
         </div>
@@ -81,7 +224,7 @@ export default function AdminDashboard() {
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
-                <QrCode className="h-6 w-6 text-primary-foreground" />
+                <QrCodeIcon className="h-6 w-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl font-bold">Daily QR Code</h2>
             </div>
@@ -91,20 +234,31 @@ export default function AdminDashboard() {
                 <div className="text-center mb-4">
                   <div className="font-bold text-lg mb-2">Today's QR Code</div>
                   <div className="text-sm text-muted-foreground">
-                    Generate a new QR code for today's attendance
+                    {qrCode ? "Active QR code for attendance" : "Generate a new QR code for today"}
                   </div>
                 </div>
                 
-                <div className="w-64 h-64 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center mb-4">
-                  <QrCode className="h-48 w-48 text-muted-foreground" />
+                <div className="w-64 h-64 mx-auto border-[3px] border-foreground bg-white flex items-center justify-center mb-4 p-4">
+                  {qrCode ? (
+                    <QRCodeSVG value={qrCode} size={224} level="H" />
+                  ) : (
+                    <QrCodeIcon className="h-48 w-48 text-muted-foreground" />
+                  )}
                 </div>
+
+                {qrCode && qrExpiry && (
+                  <div className="text-xs text-center text-muted-foreground mb-4">
+                    Expires: {new Date(qrExpiry).toLocaleString()}
+                  </div>
+                )}
                 
                 <Button 
                   size="lg" 
                   onClick={handleGenerateQR}
                   className="w-full"
+                  disabled={loading}
                 >
-                  Generate New QR Code
+                  {qrCode ? "Generate New QR Code" : "Generate QR Code"}
                 </Button>
               </div>
 
@@ -126,35 +280,41 @@ export default function AdminDashboard() {
               <h2 className="text-2xl font-bold">Pending Leave Requests</h2>
             </div>
 
-            <div className="space-y-4">
-              {pendingLeaves.map((leave) => (
-                <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
-                  <div className="font-bold mb-1">{leave.name}</div>
-                  <div className="text-sm text-muted-foreground mb-2">
-                    {leave.type} • {leave.date}
-                  </div>
-                  <div className="text-sm mb-3">{leave.reason}</div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleApproveLeave(leave.name)}
-                      className="flex-1"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Approve
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleRejectLeave(leave.name)}
-                      className="flex-1"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Reject
-                    </Button>
-                  </div>
+            <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              {pendingLeaves.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No pending leave requests
                 </div>
-              ))}
+              ) : (
+                pendingLeaves.map((leave) => (
+                  <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
+                    <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • {new Date(leave.requested_at).toLocaleDateString()}
+                    </div>
+                    <div className="text-sm mb-3">{leave.reason}</div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                        className="flex-1"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                        className="flex-1"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </div>
@@ -214,15 +374,15 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               <div className="p-4 border-[3px] border-foreground bg-background">
                 <div className="font-bold">New Admissions</div>
-                <div className="text-3xl font-bold mt-2">12</div>
+                <div className="text-3xl font-bold mt-2">-</div>
               </div>
               <div className="p-4 border-[3px] border-foreground bg-background">
                 <div className="font-bold">Dropouts</div>
-                <div className="text-3xl font-bold mt-2">2</div>
+                <div className="text-3xl font-bold mt-2">-</div>
               </div>
               <div className="p-4 border-[3px] border-foreground bg-background">
                 <div className="font-bold">Placements</div>
-                <div className="text-3xl font-bold mt-2">8</div>
+                <div className="text-3xl font-bold mt-2">-</div>
               </div>
             </div>
           </Card>
