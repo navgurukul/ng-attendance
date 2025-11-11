@@ -28,6 +28,13 @@ export default function StudentDashboard() {
   const fetchAttendanceData = async () => {
     if (!user) return;
 
+    // Fetch user profile to get account creation date
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', user.id)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from('attendance_records')
       .select('*')
@@ -49,10 +56,10 @@ export default function StudentDashboard() {
     
     const leaves = leaveData?.length || 0;
     
-    // Calculate elapsed days from start of current month to today
+    // Calculate elapsed days from account creation date to today
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const elapsedDays = Math.floor((now.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : now;
+    const elapsedDays = Math.max(1, Math.floor((now.getTime() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     
     // Calculate absent days: elapsed days with no attendance, no kitchen duty, and no approved leave
     const daysWithRecord = present + kitchenDuty + leaves;
