@@ -74,9 +74,13 @@ export default function StudentDashboard() {
     
     // Wait for the div to render before initializing scanner
     setTimeout(() => {
+      // Calculate responsive qrbox size based on screen width
+      const screenWidth = window.innerWidth;
+      const qrboxSize = screenWidth < 640 ? Math.min(screenWidth - 80, 250) : 250;
+      
       const html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } },
         false
       );
 
