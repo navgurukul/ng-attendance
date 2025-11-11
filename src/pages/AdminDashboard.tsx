@@ -94,7 +94,7 @@ export default function AdminDashboard() {
       .from('leave_requests')
       .select(`
         *,
-        profiles!student_id (
+        profiles!leave_requests_student_id_fkey (
           full_name
         )
       `)
