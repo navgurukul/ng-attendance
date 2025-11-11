@@ -8,8 +8,8 @@ import { Users, CheckCircle, XCircle, Calendar, QrCode, Download, UserPlus } fro
 export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleGenerateQR = (slot: string) => {
-    toast.success(`QR Code generated for ${slot}`);
+  const handleGenerateQR = () => {
+    toast.success("Daily QR Code generated successfully!");
   };
 
   const handleApproveLeave = (studentName: string) => {
@@ -83,38 +83,36 @@ export default function AdminDashboard() {
               <div className="bg-primary p-2 border-[3px] border-foreground">
                 <QrCode className="h-6 w-6 text-primary-foreground" />
               </div>
-              <h2 className="text-2xl font-bold">Generate QR Codes</h2>
+              <h2 className="text-2xl font-bold">Daily QR Code</h2>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 1: 9:00 AM</div>
-                  <div className="text-sm text-muted-foreground">Morning Session</div>
+            <div className="space-y-6">
+              <div className="p-6 border-[3px] border-foreground bg-background">
+                <div className="text-center mb-4">
+                  <div className="font-bold text-lg mb-2">Today's QR Code</div>
+                  <div className="text-sm text-muted-foreground">
+                    Generate a new QR code for today's attendance
+                  </div>
                 </div>
-                <Button size="sm" onClick={() => handleGenerateQR("9:00 AM")}>
-                  Generate
+                
+                <div className="w-64 h-64 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center mb-4">
+                  <QrCode className="h-48 w-48 text-muted-foreground" />
+                </div>
+                
+                <Button 
+                  size="lg" 
+                  onClick={handleGenerateQR}
+                  className="w-full"
+                >
+                  Generate New QR Code
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 2: 2:00 PM</div>
-                  <div className="text-sm text-muted-foreground">Afternoon Session</div>
+              <div className="p-4 border-[3px] border-foreground bg-muted">
+                <div className="text-sm font-bold mb-2">Note:</div>
+                <div className="text-sm text-muted-foreground">
+                  Generate one QR code per day. Students scan it once to mark their daily attendance.
                 </div>
-                <Button size="sm" onClick={() => handleGenerateQR("2:00 PM")}>
-                  Generate
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 3: 5:30 PM</div>
-                  <div className="text-sm text-muted-foreground">Evening Session</div>
-                </div>
-                <Button size="sm" onClick={() => handleGenerateQR("5:30 PM")}>
-                  Generate
-                </Button>
               </div>
             </div>
           </Card>

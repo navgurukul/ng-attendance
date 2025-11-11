@@ -11,12 +11,16 @@ export default function StudentDashboard() {
   const [leaveType, setLeaveType] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
 
-  const handleQRScan = (slot: string) => {
-    toast.success(`Attendance marked for ${slot}`);
+  const [todayMarked, setTodayMarked] = useState(false);
+
+  const handleQRScan = () => {
+    setTodayMarked(true);
+    toast.success("Attendance marked for today!");
   };
 
   const handleKitchenDuty = () => {
-    toast.success("Kitchen duty marked! Attendance credited.");
+    setTodayMarked(true);
+    toast.success("Kitchen duty marked! Attendance credited for today.");
   };
 
   const handleLeaveSubmit = (e: React.FormEvent) => {
@@ -30,13 +34,6 @@ export default function StudentDashboard() {
 
   const handleCorrectionRequest = () => {
     toast.info("Correction request feature coming soon!");
-  };
-
-  // Mock data for attendance
-  const todayAttendance = {
-    slot1: false,
-    slot2: false,
-    slot3: false,
   };
 
   const attendanceStats = {
@@ -84,47 +81,38 @@ export default function StudentDashboard() {
               <h2 className="text-2xl font-bold">Daily Attendance</h2>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 1: 9:00 AM</div>
-                  <div className="text-sm text-muted-foreground">Morning Session</div>
+            <div className="space-y-6">
+              <div className="p-6 border-[3px] border-foreground bg-background text-center">
+                <div className="mb-4">
+                  <div className="text-lg font-bold mb-2">Today's Attendance</div>
+                  <div className="text-sm text-muted-foreground">
+                    {todayMarked ? "✓ Marked" : "Not marked yet"}
+                  </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleQRScan("9:00 AM")}
-                  disabled={todayAttendance.slot1}
-                >
-                  {todayAttendance.slot1 ? "Marked" : "Scan QR"}
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 2: 2:00 PM</div>
-                  <div className="text-sm text-muted-foreground">Afternoon Session</div>
-                </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleQRScan("2:00 PM")}
-                  disabled={todayAttendance.slot2}
-                >
-                  {todayAttendance.slot2 ? "Marked" : "Scan QR"}
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border-[3px] border-foreground bg-background">
-                <div>
-                  <div className="font-bold">Slot 3: 5:30 PM</div>
-                  <div className="text-sm text-muted-foreground">Evening Session</div>
-                </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleQRScan("5:30 PM")}
-                  disabled={todayAttendance.slot3}
-                >
-                  {todayAttendance.slot3 ? "Marked" : "Scan QR"}
-                </Button>
+                
+                {!todayMarked ? (
+                  <div className="space-y-4">
+                    <div className="w-48 h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
+                      <QrCode className="h-32 w-32 text-muted-foreground" />
+                    </div>
+                    <Button 
+                      size="lg" 
+                      onClick={handleQRScan}
+                      className="w-full"
+                    >
+                      Scan QR Code
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="py-8">
+                    <div className="w-24 h-24 mx-auto bg-primary border-[3px] border-foreground flex items-center justify-center mb-4">
+                      <svg className="h-16 w-16 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="text-xl font-bold text-primary">Attendance Marked!</div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -46,7 +46,7 @@ export default function Landing() {
             </div>
             <h3 className="text-xl font-bold mb-2">QR Code Scanning</h3>
             <p className="text-muted-foreground">
-              Three daily slots: 9:00 AM, 2:00 PM, and 5:30 PM. Quick and contactless attendance marking.
+              One scan per day for quick and contactless attendance marking. Simple and efficient.
             </p>
           </Card>
 
