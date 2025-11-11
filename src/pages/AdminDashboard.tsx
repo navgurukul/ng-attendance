@@ -88,6 +88,8 @@ export default function AdminDashboard() {
   };
 
   const fetchPendingLeaves = async () => {
+    console.log('Fetching pending leaves...');
+    
     const { data, error } = await supabase
       .from('leave_requests')
       .select(`
@@ -99,7 +101,16 @@ export default function AdminDashboard() {
       .eq('status', 'pending')
       .order('requested_at', { ascending: false });
 
-    if (!error && data) {
+    console.log('Leave requests result:', { data, error });
+
+    if (error) {
+      console.error('Error fetching leave requests:', error);
+      toast.error(`Failed to fetch leave requests: ${error.message}`);
+      return;
+    }
+
+    if (data) {
+      console.log(`Found ${data.length} pending leave requests`);
       setPendingLeaves(data as any);
     }
   };
