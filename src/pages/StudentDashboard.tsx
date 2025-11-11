@@ -72,23 +72,26 @@ export default function StudentDashboard() {
   const startQRScanner = () => {
     setScanning(true);
     
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      false
-    );
+    // Wait for the div to render before initializing scanner
+    setTimeout(() => {
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
 
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
-    async function onScanSuccess(decodedText: string) {
-      html5QrcodeScanner.clear();
-      setScanning(false);
-      await handleQRScan(decodedText);
-    }
+      async function onScanSuccess(decodedText: string) {
+        html5QrcodeScanner.clear();
+        setScanning(false);
+        await handleQRScan(decodedText);
+      }
 
-    function onScanFailure(error: any) {
-      console.warn(`QR scan error: ${error}`);
-    }
+      function onScanFailure(error: any) {
+        console.warn(`QR scan error: ${error}`);
+      }
+    }, 100);
   };
 
   const handleQRScan = async (qrCode: string) => {
