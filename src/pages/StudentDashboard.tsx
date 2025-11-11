@@ -4,19 +4,37 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { QrCode, Calendar, ClipboardList, ChefHat, AlertCircle, Camera } from "lucide-react";
+import { QrCode, Calendar as CalendarIcon, ClipboardList, ChefHat, AlertCircle, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { z } from "zod";
+
+const leaveRequestSchema = z.object({
+  leaveType: z.enum(['sick', 'personal', 'emergency', 'other'], { required_error: "Please select a leave type" }),
+  reason: z.string().trim().min(10, "Reason must be at least 10 characters").max(500, "Reason must be less than 500 characters"),
+  startDate: z.date({ required_error: "Start date is required" }),
+  endDate: z.date({ required_error: "End date is required" })
+}).refine(data => data.endDate >= data.startDate, {
+  message: "End date must be on or after start date",
+  path: ["endDate"]
+});
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [leaveType, setLeaveType] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [todayMarked, setTodayMarked] = useState(false);
   const [stats, setStats] = useState({ present: 0, absent: 0, leaves: 0, kitchenDuty: 0, percentage: 0 });
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user) {
@@ -193,7 +211,27 @@ export default function StudentDashboard() {
 
   const handleLeaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !leaveType || !leaveReason) return;
+    if (!user) return;
+
+    setFormErrors({});
+
+    // Validate form
+    const validation = leaveRequestSchema.safeParse({
+      leaveType,
+      reason: leaveReason,
+      startDate,
+      endDate
+    });
+
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message;
+      });
+      setFormErrors(errors);
+      toast.error("Please fix the form errors");
+      return;
+    }
 
     setLoading(true);
 
@@ -202,7 +240,9 @@ export default function StudentDashboard() {
       .insert({
         student_id: user.id,
         leave_type: leaveType,
-        reason: leaveReason
+        reason: leaveReason.trim(),
+        start_date: format(startDate!, 'yyyy-MM-dd'),
+        end_date: format(endDate!, 'yyyy-MM-dd')
       });
 
     if (error) {
@@ -211,6 +251,8 @@ export default function StudentDashboard() {
       toast.success("Leave request submitted for approval");
       setLeaveType("");
       setLeaveReason("");
+      setStartDate(undefined);
+      setEndDate(undefined);
     }
 
     setLoading(false);
@@ -321,7 +363,7 @@ export default function StudentDashboard() {
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
+                <CalendarIcon className="h-6 w-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl font-bold">Request Leave</h2>
             </div>
@@ -333,8 +375,10 @@ export default function StudentDashboard() {
                   id="leaveType"
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
-                  required
-                  className="w-full h-12 px-4 border-[3px] border-foreground shadow-brutal-sm bg-background focus:shadow-brutal"
+                  className={cn(
+                    "w-full h-12 px-4 border-[3px] border-foreground shadow-brutal-sm bg-background focus:shadow-brutal",
+                    formErrors.leaveType && "border-red-500"
+                  )}
                 >
                   <option value="">Select leave type</option>
                   <option value="sick">Sick Leave</option>
@@ -342,18 +386,97 @@ export default function StudentDashboard() {
                   <option value="emergency">Emergency Leave</option>
                   <option value="other">Other</option>
                 </select>
+                {formErrors.leaveType && (
+                  <p className="text-sm text-red-600">{formErrors.leaveType}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-bold">Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal border-[3px] shadow-brutal-sm h-12",
+                          !startDate && "text-muted-foreground",
+                          formErrors.startDate && "border-red-500"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {formErrors.startDate && (
+                    <p className="text-sm text-red-600">{formErrors.startDate}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-bold">End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal border-[3px] shadow-brutal-sm h-12",
+                          !endDate && "text-muted-foreground",
+                          formErrors.endDate && "border-red-500"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        disabled={(date) => {
+                          const today = new Date(new Date().setHours(0, 0, 0, 0));
+                          if (date < today) return true;
+                          if (startDate && date < startDate) return true;
+                          return false;
+                        }}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {formErrors.endDate && (
+                    <p className="text-sm text-red-600">{formErrors.endDate}</p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="reason" className="font-bold">Reason</Label>
                 <Textarea
                   id="reason"
-                  placeholder="Please provide a detailed reason for your leave..."
+                  placeholder="Please provide a detailed reason for your leave (min 10 characters)..."
                   value={leaveReason}
                   onChange={(e) => setLeaveReason(e.target.value)}
-                  required
-                  className="border-[3px] border-foreground min-h-[120px] shadow-brutal-sm focus:shadow-brutal resize-none"
+                  className={cn(
+                    "border-[3px] border-foreground min-h-[120px] shadow-brutal-sm focus:shadow-brutal resize-none",
+                    formErrors.reason && "border-red-500"
+                  )}
                 />
+                {formErrors.reason && (
+                  <p className="text-sm text-red-600">{formErrors.reason}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

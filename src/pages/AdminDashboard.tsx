@@ -15,6 +15,8 @@ interface LeaveRequest {
   leave_type: string;
   reason: string;
   requested_at: string;
+  start_date: string;
+  end_date: string;
   profiles: {
     full_name: string;
   };
@@ -376,34 +378,45 @@ export default function AdminDashboard() {
                   No pending leave requests
                 </div>
               ) : (
-                pendingLeaves.map((leave) => (
-                  <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
-                    <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • {new Date(leave.requested_at).toLocaleDateString()}
+                pendingLeaves.map((leave) => {
+                  const startDate = new Date(leave.start_date);
+                  const endDate = new Date(leave.end_date);
+                  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  
+                  return (
+                    <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
+                      <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • Requested {new Date(leave.requested_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()} 
+                        <span className="text-muted-foreground">({daysDiff} {daysDiff === 1 ? 'day' : 'days'})</span>
+                      </div>
+                      <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{leave.reason}</div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                          className="flex-1"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                          className="flex-1"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-sm mb-3">{leave.reason}</div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
-                        className="flex-1"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
-                        className="flex-1"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </Card>
