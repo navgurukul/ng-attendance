@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { QrCode, Calendar as CalendarIcon, ClipboardList, ChefHat, AlertCircle, Camera } from "lucide-react";
+import { QrCode, Calendar as CalendarIcon, ClipboardList, ChefHat, AlertCircle, Camera, FileEdit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Html5QrcodeScanner } from "html5-qrcode";
@@ -24,6 +24,20 @@ const leaveRequestSchema = z.object({
   path: ["endDate"]
 });
 
+const correctionRequestSchema = z.object({
+  attendanceDate: z.date({ required_error: "Attendance date is required" }),
+  reason: z.string().trim().min(20, "Reason must be at least 20 characters").max(500, "Reason must be less than 500 characters")
+});
+
+interface CorrectionRequest {
+  id: string;
+  attendance_date: string;
+  reason: string;
+  status: string;
+  created_at: string;
+  admin_notes: string | null;
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [leaveType, setLeaveType] = useState("");
@@ -35,11 +49,15 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [correctionDate, setCorrectionDate] = useState<Date>();
+  const [correctionReason, setCorrectionReason] = useState("");
+  const [correctionRequests, setCorrectionRequests] = useState<CorrectionRequest[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchAttendanceData();
       checkTodayAttendance();
+      fetchCorrectionRequests();
     }
   }, [user]);
 
@@ -209,6 +227,23 @@ export default function StudentDashboard() {
     setLoading(false);
   };
 
+  const fetchCorrectionRequests = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('attendance_correction_requests' as any)
+      .select('*')
+      .eq('student_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching correction requests:', error);
+      return;
+    }
+
+    setCorrectionRequests((data as any) || []);
+  };
+
   const handleLeaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -253,6 +288,49 @@ export default function StudentDashboard() {
       setLeaveReason("");
       setStartDate(undefined);
       setEndDate(undefined);
+    }
+
+    setLoading(false);
+  };
+
+  const handleCorrectionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setFormErrors({});
+
+    const validation = correctionRequestSchema.safeParse({
+      attendanceDate: correctionDate,
+      reason: correctionReason
+    });
+
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message;
+      });
+      setFormErrors(errors);
+      toast.error("Please fix the form errors");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from('attendance_correction_requests' as any)
+      .insert({
+        student_id: user.id,
+        attendance_date: format(correctionDate!, 'yyyy-MM-dd'),
+        reason: correctionReason.trim()
+      });
+
+    if (error) {
+      toast.error("Failed to submit correction request");
+    } else {
+      toast.success("Attendance correction request submitted");
+      setCorrectionDate(undefined);
+      setCorrectionReason("");
+      fetchCorrectionRequests();
     }
 
     setLoading(false);
@@ -487,12 +565,107 @@ export default function StudentDashboard() {
             <div className="mt-6 p-4 border-[3px] border-foreground bg-background">
               <div className="flex items-center gap-3 mb-3">
                 <AlertCircle className="h-5 w-5 text-primary" />
-                <span className="font-bold">Missed a Scan?</span>
+                <span className="font-bold">Correction Requests</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                Contact admin to request attendance correction.
-              </p>
+              
+              {correctionRequests.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No correction requests yet</p>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {correctionRequests.map((req) => (
+                    <div key={req.id} className="text-sm p-2 border-[2px] border-foreground bg-muted">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{new Date(req.attendance_date).toLocaleDateString()}</span>
+                        <span className={cn(
+                          "text-xs font-bold px-2 py-1 border-[2px] border-foreground",
+                          req.status === 'pending' && "bg-yellow-200 text-yellow-900",
+                          req.status === 'approved' && "bg-green-200 text-green-900",
+                          req.status === 'rejected' && "bg-red-200 text-red-900"
+                        )}>
+                          {req.status.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          </Card>
+
+          {/* Attendance Correction Form */}
+          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-primary p-2 border-[3px] border-foreground">
+                <FileEdit className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <h2 className="text-2xl font-bold">Attendance Correction</h2>
+            </div>
+
+            <form onSubmit={handleCorrectionSubmit} className="space-y-4">
+              <div className="p-4 border-[3px] border-foreground bg-muted mb-4">
+                <p className="text-sm">
+                  <strong>Missed marking attendance?</strong> Submit a correction request with a valid reason. 
+                  Admin will review and approve if appropriate.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-bold">Attendance Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-[3px] shadow-brutal-sm h-12",
+                        !correctionDate && "text-muted-foreground",
+                        formErrors.attendanceDate && "border-red-500"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {correctionDate ? format(correctionDate, "PPP") : "Pick the missed date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={correctionDate}
+                      onSelect={setCorrectionDate}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date >= today;
+                      }}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {formErrors.attendanceDate && (
+                  <p className="text-sm text-red-600">{formErrors.attendanceDate}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="correctionReason" className="font-bold">Reason for Missing Attendance</Label>
+                <Textarea
+                  id="correctionReason"
+                  placeholder="Explain why you missed marking attendance (min 20 characters)..."
+                  value={correctionReason}
+                  onChange={(e) => setCorrectionReason(e.target.value)}
+                  className={cn(
+                    "border-[3px] border-foreground min-h-[120px] shadow-brutal-sm focus:shadow-brutal resize-none",
+                    formErrors.reason && "border-red-500"
+                  )}
+                />
+                {formErrors.reason && (
+                  <p className="text-sm text-red-600">{formErrors.reason}</p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Submitting..." : "Submit Correction Request"}
+              </Button>
+            </form>
           </Card>
         </div>
 
