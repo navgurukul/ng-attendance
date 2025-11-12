@@ -13,6 +13,7 @@ export const Navbar = ({ isAuthenticated, userRole, onLogout }: NavbarProps) => 
   
   const isActive = (path: string) => location.pathname === path;
   
+
   return (
     <nav className="border-b-[4px] border-foreground bg-background">
       <div className="container mx-auto px-4">
