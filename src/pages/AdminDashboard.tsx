@@ -59,9 +59,14 @@ export default function AdminDashboard() {
     present: 0,
     absent: 0,
     kitchen: 0,
-    sickLeave: 0,
-    personalLeave: 0,
-    emergencyLeave: 0,
+    jobInterviewsLeave: 0,
+    documentationLeave: 0,
+    collegeLeave: 0,
+    unApproveLeave: 0,
+    examLeave: 0,
+    specialOccasionsLeave: 0,
+    healthGeneralLeave: 0,
+    healthPeriodLeave: 0,
   });
   const [loading, setLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -93,17 +98,27 @@ export default function AdminDashboard() {
       .select('*')
       .eq('status', 'approved');
 
-    const sickLeave = leaveData?.filter(l => l.leave_type === 'sick').length || 0;
-    const personalLeave = leaveData?.filter(l => l.leave_type === 'personal').length || 0;
-    const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
+    const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'Job interviews Leave').length || 0;
+    const documentationLeave = leaveData?.filter(l => l.leave_type === 'Documentation Leave').length || 0;
+    const collegeLeave = leaveData?.filter(l => l.leave_type === 'College Leave').length || 0;
+    const unApproveLeave = leaveData?.filter(l => l.leave_type === 'UnApprove Leave').length || 0;
+    const examLeave = leaveData?.filter(l => l.leave_type === 'Exam Leave').length || 0;
+    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'Special Occasions Leave').length || 0;
+    const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'Health General Leave').length || 0;
+    const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'Health period Leave').length || 0;
 
     setStats({
       present,
       absent: 0, // Calculate based on total students
       kitchen,
-      sickLeave,
-      personalLeave,
-      emergencyLeave,
+      jobInterviewsLeave,
+      documentationLeave,
+      collegeLeave,
+      unApproveLeave,
+      examLeave,
+      specialOccasionsLeave,
+      healthGeneralLeave,
+      healthPeriodLeave,
     });
 
     // Check if QR code exists for today
@@ -391,16 +406,36 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Kitchen Duty</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.sickLeave}</div>
-            <div className="text-sm text-muted-foreground">Sick Leave</div>
+            <div className="text-2xl font-bold mb-1">{stats.jobInterviewsLeave}</div>
+            <div className="text-sm text-muted-foreground">Job Interviews Leave</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.personalLeave}</div>
-            <div className="text-sm text-muted-foreground">Personal Leave</div>
+            <div className="text-2xl font-bold mb-1">{stats.documentationLeave}</div>
+            <div className="text-sm text-muted-foreground">Documentation Leave</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.emergencyLeave}</div>
-            <div className="text-sm text-muted-foreground">Emergency</div>
+            <div className="text-2xl font-bold mb-1">{stats.collegeLeave}</div>
+            <div className="text-sm text-muted-foreground">College Leave</div>
+          </Card>
+           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-2xl font-bold mb-1">{stats.unApproveLeave}</div>
+            <div className="text-sm text-muted-foreground">UnApprove Leave</div>
+          </Card>
+           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-2xl font-bold mb-1">{stats.examLeave}</div>
+            <div className="text-sm text-muted-foreground">Exam Leave</div>
+          </Card>
+           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-2xl font-bold mb-1">{stats.specialOccasionsLeave}</div>
+            <div className="text-sm text-muted-foreground">Special Occasions Leave</div>
+          </Card>
+           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-2xl font-bold mb-1">{stats.healthGeneralLeave}</div>
+            <div className="text-sm text-muted-foreground">Health General Leave</div>
+          </Card>
+           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="text-2xl font-bold mb-1">{stats.healthPeriodLeave}</div>
+            <div className="text-sm text-muted-foreground">Health Period~ Leave</div>
           </Card>
         </div>
 
