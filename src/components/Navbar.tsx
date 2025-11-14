@@ -13,14 +13,13 @@ export const Navbar = ({ isAuthenticated, userRole, onLogout }: NavbarProps) => 
   
   const isActive = (path: string) => location.pathname === path;
   
+
   return (
     <nav className="border-b-[4px] border-foreground bg-background">
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-primary p-3 border-[3px] border-foreground shadow-brutal group-hover:shadow-brutal-sm transition-all">
-              <GraduationCap className="h-8 w-8 text-primary-foreground" />
-            </div>
+              <img src="/Anish.png" alt="Logo" className="h-16 w-17" />
             <span className="text-2xl font-bold">Smart Attendance</span>
           </Link>
           

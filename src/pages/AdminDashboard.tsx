@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, UserPlus } from "lucide-react";
+import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, UserPlus, FileEdit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { QRCodeSVG } from "qrcode.react";
+import { z } from "zod";
 
 interface LeaveRequest {
   id: string;
@@ -14,10 +15,37 @@ interface LeaveRequest {
   leave_type: string;
   reason: string;
   requested_at: string;
+  start_date: string;
+  end_date: string;
   profiles: {
     full_name: string;
   };
 }
+
+interface CorrectionRequest {
+  id: string;
+  student_id: string;
+  attendance_date: string;
+  reason: string;
+  status: string;
+  created_at: string;
+  profiles: {
+    full_name: string;
+  };
+}
+
+interface StudentRecord {
+  id: string;
+  full_name: string;
+  email: string;
+  roll_number: string | null;
+  department: string | null;
+  total_days: number;
+  present_days: number;
+  attendance_rate: number;
+}
+
+const searchQuerySchema = z.string().max(100, "Search query too long");
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -25,6 +53,8 @@ export default function AdminDashboard() {
   const [qrCode, setQrCode] = useState<string>("");
   const [qrExpiry, setQrExpiry] = useState<string>("");
   const [pendingLeaves, setPendingLeaves] = useState<LeaveRequest[]>([]);
+  const [pendingCorrections, setPendingCorrections] = useState<CorrectionRequest[]>([]);
+  const [studentRecords, setStudentRecords] = useState<StudentRecord[]>([]);
   const [stats, setStats] = useState({
     present: 0,
     absent: 0,
@@ -34,11 +64,14 @@ export default function AdminDashboard() {
     emergencyLeave: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [studentsLoading, setStudentsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
       fetchPendingLeaves();
+      fetchPendingCorrections();
+      fetchStudentRecords();
     }
   }, [user]);
 
@@ -92,16 +125,92 @@ export default function AdminDashboard() {
       .from('leave_requests')
       .select(`
         *,
-        profiles:student_id (
+        profiles!leave_requests_student_id_fkey (
           full_name
         )
       `)
       .eq('status', 'pending')
       .order('requested_at', { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      console.error('Error fetching leave requests:', error);
+      toast.error(`Failed to fetch leave requests: ${error.message}`);
+      return;
+    }
+
+    if (data) {
       setPendingLeaves(data as any);
     }
+  };
+
+  const fetchPendingCorrections = async () => {
+    const { data, error } = await supabase
+      .from('attendance_correction_requests' as any)
+      .select(`
+        *,
+        profiles!attendance_correction_requests_student_id_fkey (
+          full_name
+        )
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching correction requests:', error);
+      return;
+    }
+
+    if (data) {
+      setPendingCorrections(data as any);
+    }
+  };
+
+  const fetchStudentRecords = async () => {
+    setStudentsLoading(true);
+    
+    // Fetch all student profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('full_name');
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      toast.error('Failed to fetch student records');
+      setStudentsLoading(false);
+      return;
+    }
+
+    // Fetch all attendance records
+    const { data: attendance, error: attendanceError } = await supabase
+      .from('attendance_records')
+      .select('student_id, status');
+
+    if (attendanceError) {
+      console.error('Error fetching attendance:', attendanceError);
+    }
+
+    // Calculate attendance stats for each student
+    const records: StudentRecord[] = (profiles || []).map(profile => {
+      const studentAttendance = attendance?.filter(a => a.student_id === profile.id) || [];
+      const presentDays = studentAttendance.filter(a => a.status === 'present').length;
+      const totalDays = studentAttendance.length;
+      const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+
+      return {
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        roll_number: profile.roll_number,
+        department: profile.department,
+        total_days: totalDays,
+        present_days: presentDays,
+        attendance_rate: Math.round(attendanceRate),
+      };
+    });
+
+    setStudentRecords(records);
+    setStudentsLoading(false);
   };
 
   const handleGenerateQR = async () => {
@@ -179,9 +288,85 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveCorrection = async (correctionId: string, studentId: string, attendanceDate: string, studentName: string) => {
+    if (!user) return;
+
+    // Update correction request status
+    const { error: updateError } = await supabase
+      .from('attendance_correction_requests' as any)
+      .update({
+        status: 'approved',
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', correctionId);
+
+    if (updateError) {
+      toast.error("Failed to approve correction");
+      return;
+    }
+
+    // Create attendance record for the student
+    const { error: insertError } = await supabase
+      .from('attendance_records')
+      .insert({
+        student_id: studentId,
+        attendance_date: attendanceDate,
+        status: 'present'
+      });
+
+    if (insertError) {
+      console.error('Error creating attendance record:', insertError);
+      toast.error("Correction approved but failed to mark attendance");
+    } else {
+      toast.success(`Attendance corrected for ${studentName}`);
+    }
+
+    fetchPendingCorrections();
+  };
+
+  const handleRejectCorrection = async (correctionId: string, studentName: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('attendance_correction_requests' as any)
+      .update({
+        status: 'rejected',
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', correctionId);
+
+    if (error) {
+      toast.error("Failed to reject correction");
+    } else {
+      toast.error(`Correction rejected for ${studentName}`);
+      fetchPendingCorrections();
+    }
+  };
+
   const handleExportReport = () => {
     toast.info("Report export feature coming soon!");
   };
+
+  const handleSearchChange = (value: string) => {
+    const result = searchQuerySchema.safeParse(value);
+    if (result.success) {
+      setSearchQuery(value);
+    }
+  };
+
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) return studentRecords;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return studentRecords.filter(student => 
+      student.full_name.toLowerCase().includes(query) ||
+      student.email.toLowerCase().includes(query) ||
+      student.roll_number?.toLowerCase().includes(query) ||
+      student.department?.toLowerCase().includes(query)
+    );
+  }, [searchQuery, studentRecords]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -286,26 +471,93 @@ export default function AdminDashboard() {
                   No pending leave requests
                 </div>
               ) : (
-                pendingLeaves.map((leave) => (
-                  <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
-                    <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • {new Date(leave.requested_at).toLocaleDateString()}
+                pendingLeaves.map((leave) => {
+                  const startDate = new Date(leave.start_date);
+                  const endDate = new Date(leave.end_date);
+                  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  
+                  return (
+                    <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
+                      <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • Requested {new Date(leave.requested_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()} 
+                        <span className="text-muted-foreground">({daysDiff} {daysDiff === 1 ? 'day' : 'days'})</span>
+                      </div>
+                      <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{leave.reason}</div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                          className="flex-1"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                          className="flex-1"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-sm mb-3">{leave.reason}</div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
+
+          {/* Attendance Correction Approvals */}
+          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-primary p-2 border-[3px] border-foreground">
+                <FileEdit className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <h2 className="text-2xl font-bold">Attendance Corrections</h2>
+            </div>
+
+            <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              {pendingCorrections.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No pending correction requests
+                </div>
+              ) : (
+                pendingCorrections.map((correction) => (
+                  <div key={correction.id} className="p-4 border-[3px] border-foreground bg-background">
+                    <div className="font-bold mb-1">{correction.profiles?.full_name || 'Unknown'}</div>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Requested {new Date(correction.created_at).toLocaleDateString()} at {new Date(correction.created_at).toLocaleTimeString()}
+                    </div>
+                    <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Missed Date: {new Date(correction.attendance_date).toLocaleDateString()}
+                    </div>
+                    <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{correction.reason}</div>
                     <div className="flex gap-2">
                       <Button 
                         size="sm" 
-                        onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                        onClick={() => handleApproveCorrection(
+                          correction.id, 
+                          correction.student_id,
+                          correction.attendance_date,
+                          correction.profiles?.full_name || 'Student'
+                        )}
                         className="flex-1"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
+                        Approve & Mark Present
                       </Button>
                       <Button 
                         size="sm" 
                         variant="destructive"
-                        onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
+                        onClick={() => handleRejectCorrection(correction.id, correction.profiles?.full_name || 'Student')}
                         className="flex-1"
                       >
                         <XCircle className="h-4 w-4 mr-1" />
@@ -330,16 +582,61 @@ export default function AdminDashboard() {
 
           <div className="mb-4">
             <Input
-              placeholder="Search students by name or ID..."
+              placeholder="Search students by name, email, roll number, or department..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="border-[3px] border-foreground h-12 shadow-brutal-sm"
             />
           </div>
 
-          <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
-            <p className="text-muted-foreground">Student search and records view coming soon!</p>
-          </div>
+          {studentsLoading ? (
+            <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
+              <p className="text-muted-foreground">Loading student records...</p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No students found matching your search' : 'No student records available'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto border-[3px] border-foreground">
+              <table className="w-full">
+                <thead className="bg-primary text-primary-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Name</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Roll Number</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Department</th>
+                    <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Email</th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-r-[3px] border-foreground">Present Days</th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-foreground">Attendance %</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-background">
+                  {filteredStudents.map((student, index) => (
+                    <tr key={student.id} className={index % 2 === 0 ? 'bg-background' : 'bg-muted'}>
+                      <td className="px-4 py-3 font-medium border-r-[3px] border-foreground">{student.full_name}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.roll_number || '-'}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.department || '-'}</td>
+                      <td className="px-4 py-3 border-r-[3px] border-foreground text-sm">{student.email}</td>
+                      <td className="px-4 py-3 text-center font-bold border-r-[3px] border-foreground">
+                        {student.present_days}/{student.total_days}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`font-bold ${
+                          student.attendance_rate >= 75 ? 'text-green-600' :
+                          student.attendance_rate >= 50 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {student.attendance_rate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Reports & Lifecycle */}
