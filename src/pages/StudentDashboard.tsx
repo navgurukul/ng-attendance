@@ -80,7 +80,7 @@ useEffect(() => {
       .eq('student_id', user.id);
 
     const { data: leaveData } = await supabase
-      .from<LeaveRequest>('leave_requests')
+      .from('leave_requests')
       .select('*')
       .eq('student_id', user.id)
       .eq('status', 'approved');
