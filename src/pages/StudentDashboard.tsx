@@ -64,6 +64,124 @@ export default function StudentDashboard() {
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionRequests, setCorrectionRequests] = useState<CorrectionRequest[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [reportStatus, setReportStatus] = useState<"all" | "present" | "leave" | "kitchen_duty" | "absent">("all");
+const [reportFromDate, setReportFromDate] = useState<Date>();
+const [reportToDate, setReportToDate] = useState<Date>();
+const [filteredRecords, setFilteredRecords] = useState<any[]>([]);
+
+
+
+useEffect(() => {
+  if (!user) return;
+
+  const fetchRecords = async () => {
+    const { data: attendanceData } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('student_id', user.id);
+
+    const { data: leaveData } = await supabase
+      .from<LeaveRequest>('leave_requests')
+      .select('*')
+      .eq('student_id', user.id)
+      .eq('status', 'approved');
+
+    let allRecords: any[] = [];
+
+   
+    attendanceData?.forEach((r) => {
+      allRecords.push({
+        from: r.attendance_date,
+        to: r.attendance_date,
+        status: r.status === "present" ? "Present" : r.status === "kitchen_duty" ? "Kitchen Duty" : "Unknown"
+      });
+    });
+
+ 
+    leaveData?.forEach((l) => {
+      allRecords.push({
+        from: l.start_date,
+        to: l.end_date,
+        status: l.leave_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+      });
+    });
+
+  
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', user.id)
+      .maybeSingle();
+    const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : new Date();
+    const today = new Date();
+    for (let d = new Date(accountCreatedAt); d <= today; d.setDate(d.getDate() + 1)) {
+      const dateStr = format(d, "yyyy-MM-dd");
+      if (!allRecords.some(r => dateStr >= r.from && dateStr <= r.to)) {
+        allRecords.push({
+          from: dateStr,
+          to: dateStr,
+          status: "Absent"
+        });
+      }
+    }
+
+
+let filtered = allRecords;
+if (reportStatus && reportStatus !== "all") {
+  filtered = filtered.filter(r => {
+    switch (reportStatus) {
+      case "present":
+        return r.status.toLowerCase() === "present";
+      case "kitchen_duty":
+        return r.status.toLowerCase() === "kitchen duty";
+      case "leave":
+      
+        const leaveTypes = [
+          "emergency", "job interview", "documentation", "college", 
+          "exam", "special occasions", "health general", "health period"
+        ];
+        return leaveTypes.includes(r.status.toLowerCase());
+      case "absent":
+        return r.status.toLowerCase() === "absent";
+      default:
+        return true;
+    }
+  });
+}
+
+
+   
+const normalize = (dateStr) => {
+  const d = new Date(dateStr);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
+if (reportFromDate) {
+  const from = normalize(reportFromDate);
+  filtered = filtered.filter(r => {
+    const recFrom = normalize(r.from);
+    return recFrom >= from;
+  });
+}
+
+if (reportToDate) {
+  const to = normalize(reportToDate);
+  filtered = filtered.filter(r => {
+    const recTo = normalize(r.to);
+    return recTo <= to;
+  });
+}
+
+
+
+
+    filtered.sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
+
+    setFilteredRecords(filtered);
+  };
+
+  fetchRecords();
+}, [user, reportStatus, reportFromDate, reportToDate]);
 
   useEffect(() => {
     if (user) {
@@ -77,7 +195,7 @@ export default function StudentDashboard() {
   const fetchAttendanceData = async () => {
     if (!user) return;
 
-    // Fetch user profile to get account creation date
+
     const { data: profileData } = await supabase
       .from('profiles')
       .select('created_at')
@@ -105,16 +223,15 @@ export default function StudentDashboard() {
     
     const leaves = leaveData?.length || 0;
     
-    // Calculate elapsed days from account creation date to today
     const now = new Date();
     const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : now;
     const elapsedDays = Math.max(1, Math.floor((now.getTime() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     
-    // Calculate absent days: elapsed days with no attendance, no kitchen duty, and no approved leave
+   
     const daysWithRecord = present + kitchenDuty + leaves;
     const absent = Math.max(0, elapsedDays - daysWithRecord);
     
-    // Attendance percentage based only on days present out of elapsed days
+   
     const percentage = elapsedDays > 0 ? Math.round((present / elapsedDays) * 100) : 0;
 
     setStats({ present, absent, leaves, kitchenDuty, percentage });
@@ -137,9 +254,9 @@ export default function StudentDashboard() {
   const startQRScanner = () => {
     setScanning(true);
     
-    // Wait for the div to render before initializing scanner
+   
     setTimeout(() => {
-      // Calculate responsive qrbox size based on screen width
+    
       const screenWidth = window.innerWidth;
       const qrboxSize = screenWidth < 640 ? Math.min(screenWidth - 80, 250) : 250;
       
@@ -168,7 +285,7 @@ export default function StudentDashboard() {
 
     setLoading(true);
     
-    // Verify QR code is valid and active
+   
     const { data: qrData, error: qrError } = await supabase
       .from('qr_codes')
       .select('*')
@@ -182,14 +299,13 @@ export default function StudentDashboard() {
       return;
     }
 
-    // Check if QR code has expired
+   
     if (new Date(qrData.expires_at) < new Date()) {
       toast.error("QR code has expired");
       setLoading(false);
       return;
     }
 
-    // Mark attendance
     const { error } = await supabase
       .from('attendance_records')
       .insert({
@@ -743,17 +859,68 @@ const fetchLeaveRequests = async () => {
         </div>
 
         {/* Reports Section */}
-        <Card className="mt-6 p-6 border-[3px] border-foreground shadow-brutal bg-card">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-primary p-2 border-[3px] border-foreground">
-              <ClipboardList className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h2 className="text-2xl font-bold">Attendance Reports</h2>
-          </div>
-          <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
-            <p className="text-muted-foreground">Charts and detailed reports coming soon!</p>
-          </div>
-        </Card>
+    <div className="mb-4 flex flex-wrap gap-2 items-center">
+  <select
+    value={reportStatus}
+    onChange={(e) => setReportStatus(e.target.value as any)}
+    className="border-[2px] border-foreground px-2 py-1 rounded"
+  >
+    <option value="all">All</option>
+    <option value="present">Present</option>
+    <option value="leave">Leave</option>
+    <option value="kitchen_duty">Kitchen Duty</option>
+    <option value="absent">Absent</option>
+  </select>
+
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button variant="outline">
+        From: {reportFromDate ? format(reportFromDate, "PPP") : "Pick date"}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <Calendar mode="single" selected={reportFromDate} onSelect={setReportFromDate} />
+    </PopoverContent>
+  </Popover>
+
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button variant="outline">
+        To: {reportToDate ? format(reportToDate, "PPP") : "Pick date"}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent>
+      <Calendar mode="single" selected={reportToDate} onSelect={setReportToDate} />
+    </PopoverContent>
+  </Popover>
+</div>
+
+{filteredRecords.length === 0 ? (
+  <p className="text-sm text-muted-foreground">No records found for selected filters.</p>
+) : (
+  <div className="overflow-x-auto">
+<table className="w-full border-collapse border-[2px] border-foreground">
+  <thead>
+    <tr>
+      <th className="border-[2px] border-foreground px-2 py-1">From</th>
+      <th className="border-[2px] border-foreground px-2 py-1">To</th>
+      <th className="border-[2px] border-foreground px-2 py-1">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredRecords.map((rec, idx) => (
+      <tr key={idx} className="text-sm">
+        <td className="border-[2px] border-foreground px-2 py-1">{new Date(rec.from).toLocaleDateString()}</td>
+        <td className="border-[2px] border-foreground px-2 py-1">{new Date(rec.to).toLocaleDateString()}</td>
+        <td className="border-[2px] border-foreground px-2 py-1">{rec.status}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+  </div>
+)}
+
       </div>
     </div>
   );
