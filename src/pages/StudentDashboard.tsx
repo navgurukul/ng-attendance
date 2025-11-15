@@ -70,7 +70,6 @@ const [reportToDate, setReportToDate] = useState<Date>();
 const [filteredRecords, setFilteredRecords] = useState<any[]>([]);
 
 
-
 useEffect(() => {
   if (!user) return;
 
@@ -851,10 +850,6 @@ const fetchLeaveRequests = async () => {
                 </div>
               )}
             </div>
-
-
-
-
           </Card>
         </div>
 
