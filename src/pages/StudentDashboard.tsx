@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 
 const leaveRequestSchema = z.object({
-  leaveType: z.enum(['job_interview', 'documentation','college','exam','special_occasion', 'health_general', 'health_period'], {"required_error": "Please select a leave type" }),
+  leaveType: z.enum(['emergency', 'job_interview', 'documentation','college','exam','special_occasions ', 'health_general', 'health_period'], {"required_error": "Please select a leave type" }),
   reason: z.string().trim().min(10, "Reason must be at least 10 characters").max(500, "Reason must be less than 500 characters"),
   startDate: z.date({ required_error: "Start date is required" }),
   endDate: z.date({ required_error: "End date is required" })
@@ -459,12 +459,12 @@ export default function StudentDashboard() {
                   )}
                 >
                   <option value="">Select leave type</option>
-                  {/* <option value="emergency">Emergency</option> */}
+                  <option value="emergency">Emergency</option>
                   <option value="job_interview">Job interviews Leave</option>
                   <option value="documentation">documentation</option>
                   <option value="college">college</option>
                   <option value="exam">exam</option>
-                  <option value="special_occasion">special occasions </option>
+                  <option value="special_occasions">special occasions </option>
                   <option value="health_general">health general</option>
                   <option value="health_period">Health period Leave</option>
                 </select>
