@@ -62,7 +62,6 @@ export default function AdminDashboard() {
     jobInterviewsLeave: 0,
     documentationLeave: 0,
     collegeLeave: 0,
-    unApproveLeave: 0,
     examLeave: 0,
     specialOccasionsLeave: 0,
     healthGeneralLeave: 0,
@@ -98,14 +97,13 @@ export default function AdminDashboard() {
       .select('*')
       .eq('status', 'approved');
 
-    const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'Job interviews Leave').length || 0;
-    const documentationLeave = leaveData?.filter(l => l.leave_type === 'Documentation Leave').length || 0;
-    const collegeLeave = leaveData?.filter(l => l.leave_type === 'College Leave').length || 0;
-    const unApproveLeave = leaveData?.filter(l => l.leave_type === 'UnApprove Leave').length || 0;
-    const examLeave = leaveData?.filter(l => l.leave_type === 'Exam Leave').length || 0;
-    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'Special Occasions Leave').length || 0;
-    const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'Health General Leave').length || 0;
-    const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'Health period Leave').length || 0;
+    const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'job_interview').length || 0;
+    const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
+    const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
+    const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
+    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasion').length || 0;
+    const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
+    const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
 
     setStats({
       present,
@@ -114,7 +112,6 @@ export default function AdminDashboard() {
       jobInterviewsLeave,
       documentationLeave,
       collegeLeave,
-      unApproveLeave,
       examLeave,
       specialOccasionsLeave,
       healthGeneralLeave,
@@ -411,31 +408,27 @@ export default function AdminDashboard() {
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.documentationLeave}</div>
-            <div className="text-sm text-muted-foreground">Documentation Leave</div>
+            <div className="text-sm text-muted-foreground">documentation</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.collegeLeave}</div>
-            <div className="text-sm text-muted-foreground">College Leave</div>
-          </Card>
-           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.unApproveLeave}</div>
-            <div className="text-sm text-muted-foreground">UnApprove Leave</div>
+            <div className="text-sm text-muted-foreground">college</div>
           </Card>
            <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.examLeave}</div>
-            <div className="text-sm text-muted-foreground">Exam Leave</div>
+            <div className="text-sm text-muted-foreground">exam</div>
           </Card>
            <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.specialOccasionsLeave}</div>
-            <div className="text-sm text-muted-foreground">Special Occasions Leave</div>
+            <div className="text-sm text-muted-foreground">special_occasions</div>
           </Card>
            <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.healthGeneralLeave}</div>
-            <div className="text-sm text-muted-foreground">Health General Leave</div>
+            <div className="text-sm text-muted-foreground">health_general</div>
           </Card>
            <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.healthPeriodLeave}</div>
-            <div className="text-sm text-muted-foreground">Health Period~ Leave</div>
+            <div className="text-sm text-muted-foreground">Health Period Leave</div>
           </Card>
         </div>
 
