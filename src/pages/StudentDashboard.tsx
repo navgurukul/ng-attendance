@@ -859,11 +859,19 @@ const fetchLeaveRequests = async () => {
         </div>
 
         {/* Reports Section */}
-    <div className="mb-4 flex flex-wrap gap-2 items-center">
+   {/* Heading Center */}
+<h1 className="text-center text-2xl font-semibold mb-6">
+  Attendance Reports
+</h1>
+
+{/* Filters Section */}
+<div className="flex flex-wrap justify-center items-center gap-4 mb-6">
+
+  {/* Status Filter */}
   <select
     value={reportStatus}
     onChange={(e) => setReportStatus(e.target.value as any)}
-    className="border-[2px] border-foreground px-2 py-1 rounded"
+    className="border-[2px] border-foreground px-3 py-2 rounded-md"
   >
     <option value="all">All</option>
     <option value="present">Present</option>
@@ -872,54 +880,73 @@ const fetchLeaveRequests = async () => {
     <option value="absent">Absent</option>
   </select>
 
+  {/* From Date */}
   <Popover>
     <PopoverTrigger asChild>
-      <Button variant="outline">
+      <Button variant="outline" className="px-4 py-2">
         From: {reportFromDate ? format(reportFromDate, "PPP") : "Pick date"}
       </Button>
     </PopoverTrigger>
     <PopoverContent>
-      <Calendar mode="single" selected={reportFromDate} onSelect={setReportFromDate} />
+      <Calendar
+        mode="single"
+        selected={reportFromDate}
+        onSelect={setReportFromDate}
+      />
     </PopoverContent>
   </Popover>
 
+  {/* To Date */}
   <Popover>
     <PopoverTrigger asChild>
-      <Button variant="outline">
+      <Button variant="outline" className="px-4 py-2">
         To: {reportToDate ? format(reportToDate, "PPP") : "Pick date"}
       </Button>
     </PopoverTrigger>
     <PopoverContent>
-      <Calendar mode="single" selected={reportToDate} onSelect={setReportToDate} />
+      <Calendar
+        mode="single"
+        selected={reportToDate}
+        onSelect={setReportToDate}
+      />
     </PopoverContent>
   </Popover>
 </div>
 
+{/* Table Section */}
 {filteredRecords.length === 0 ? (
-  <p className="text-sm text-muted-foreground">No records found for selected filters.</p>
+  <p className="text-center text-sm text-muted-foreground">
+    No records found for selected filters.
+  </p>
 ) : (
   <div className="overflow-x-auto">
-<table className="w-full border-collapse border-[2px] border-foreground">
-  <thead>
-    <tr>
-      <th className="border-[2px] border-foreground px-2 py-1">From</th>
-      <th className="border-[2px] border-foreground px-2 py-1">To</th>
-      <th className="border-[2px] border-foreground px-2 py-1">Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    {filteredRecords.map((rec, idx) => (
-      <tr key={idx} className="text-sm">
-        <td className="border-[2px] border-foreground px-2 py-1">{new Date(rec.from).toLocaleDateString()}</td>
-        <td className="border-[2px] border-foreground px-2 py-1">{new Date(rec.to).toLocaleDateString()}</td>
-        <td className="border-[2px] border-foreground px-2 py-1">{rec.status}</td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
+    <table className="w-full border-collapse border-[2px] border-foreground">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="border-[2px] border-foreground px-2 py-2">From</th>
+          <th className="border-[2px] border-foreground px-2 py-2">To</th>
+          <th className="border-[2px] border-foreground px-2 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredRecords.map((rec, idx) => (
+          <tr key={idx} className="text-sm text-center">
+            <td className="border-[2px] border-foreground px-2 py-2">
+              {new Date(rec.from).toLocaleDateString()}
+            </td>
+            <td className="border-[2px] border-foreground px-2 py-2">
+              {new Date(rec.to).toLocaleDateString()}
+            </td>
+            <td className="border-[2px] border-foreground px-2 py-2 capitalize">
+              {rec.status}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
 )}
+
 
       </div>
     </div>
