@@ -38,6 +38,17 @@ interface CorrectionRequest {
   admin_notes: string | null;
 }
 
+interface LeaveRequest {
+  id: string;
+  leave_type: string;
+  reason: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  created_at: string;
+}
+
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [leaveType, setLeaveType] = useState("");
@@ -52,12 +63,14 @@ export default function StudentDashboard() {
   const [correctionDate, setCorrectionDate] = useState<Date>();
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionRequests, setCorrectionRequests] = useState<CorrectionRequest[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchAttendanceData();
       checkTodayAttendance();
       fetchCorrectionRequests();
+       fetchLeaveRequests();
     }
   }, [user]);
 
@@ -243,6 +256,24 @@ export default function StudentDashboard() {
 
     setCorrectionRequests((data as any) || []);
   };
+
+const fetchLeaveRequests = async () => {
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*')
+    .eq('student_id', user.id)
+    .order('start_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching leave requests:', error);
+    return;
+  }
+
+  setLeaveRequests((data as any) || []);
+};
+
 
   const handleLeaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -567,35 +598,39 @@ export default function StudentDashboard() {
             </form>
 
             <div className="mt-6 p-4 border-[3px] border-foreground bg-background">
-              <div className="flex items-center gap-3 mb-3">
-                <AlertCircle className="h-5 w-5 text-primary" />
-                <span className="font-bold">Correction Requests</span>
-              </div>
-              
-              {correctionRequests.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No correction requests yet</p>
-              ) : (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {correctionRequests.map((req) => (
-                    <div key={req.id} className="text-sm p-2 border-[2px] border-foreground bg-muted">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{new Date(req.attendance_date).toLocaleDateString()}</span>
-                        <span className={cn(
-                          "text-xs font-bold px-2 py-1 border-[2px] border-foreground",
-                          req.status === 'pending' && "bg-yellow-200 text-yellow-900",
-                          req.status === 'approved' && "bg-green-200 text-green-900",
-                          req.status === 'rejected' && "bg-red-200 text-red-900"
-                        )}>
-                          {req.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-3 mb-3">
+    <AlertCircle className="h-5 w-5 text-primary" />
+    <span className="font-bold">Leave Requests</span>
+  </div>
+
+  {leaveRequests.length === 0 ? (
+    <p className="text-sm text-muted-foreground">No leave requests yet</p>
+  ) : (
+    <div className="space-y-2 max-h-40 overflow-y-auto">
+      {leaveRequests.map((leave) => (
+        <div key={leave.id} className="text-sm p-2 border-[2px] border-foreground bg-muted">
+          <div className="flex justify-between items-center">
+            <span>
+              {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1).replace(/_/g, " ")}: {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+            </span>
+            <span className={cn(
+              "text-xs font-bold px-2 py-1 border-[2px] border-foreground",
+              leave.status === 'pending' && "bg-yellow-200 text-yellow-900",
+              leave.status === 'approved' && "bg-green-200 text-green-900",
+              leave.status === 'rejected' && "bg-red-200 text-red-900"
+            )}>
+              {leave.status.toUpperCase()}
+            </span>
+          </div>
+          <div className="mt-1 text-xs italic">{leave.reason}</div>
+        </div>
+      ))}
+    </div>
+  )}
             </div>
           </Card>
-
+          
+      
           {/* Attendance Correction Form */}
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
@@ -670,6 +705,40 @@ export default function StudentDashboard() {
                 {loading ? "Submitting..." : "Submit Correction Request"}
               </Button>
             </form>
+
+            
+            <div className="mt-6 p-4 border-[3px] border-foreground bg-background">
+              <div className="flex items-center gap-3 mb-3">
+                <AlertCircle className="h-5 w-5 text-primary" />
+                <span className="font-bold">Correction Requests</span>
+              </div>
+              
+              {correctionRequests.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No correction requests yet</p>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {correctionRequests.map((req) => (
+                    <div key={req.id} className="text-sm p-2 border-[2px] border-foreground bg-muted">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{new Date(req.attendance_date).toLocaleDateString()}</span>
+                        <span className={cn(
+                          "text-xs font-bold px-2 py-1 border-[2px] border-foreground",
+                          req.status === 'pending' && "bg-yellow-200 text-yellow-900",
+                          req.status === 'approved' && "bg-green-200 text-green-900",
+                          req.status === 'rejected' && "bg-red-200 text-red-900"
+                        )}>
+                          {req.status.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
+
+
           </Card>
         </div>
 
