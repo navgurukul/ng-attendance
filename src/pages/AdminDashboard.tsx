@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, UserPlus, FileEdit } from "lucide-react";
+import { Users, CheckCircle, XCircle, Calendar, QrCode as QrCodeIcon, Download, UserPlus, FileEdit, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface LeaveRequest {
   id: string;
@@ -43,7 +45,10 @@ interface StudentRecord {
   total_days: number;
   present_days: number;
   attendance_rate: number;
+  latest_status: string;
+  latest_status_date: string | null;
 }
+
 
 const searchQuerySchema = z.string().max(100, "Search query too long");
 
@@ -71,6 +76,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(false);
 
+  
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null); 
+  const [detailedRecords, setDetailedRecords] = useState<any[]>([]);          
+  const [detailsLoading, setDetailsLoading] = useState(false);                 
+
+
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
@@ -83,7 +98,6 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     const today = new Date().toISOString().split('T')[0];
 
-    // Fetch today's attendance
     const { data: attendanceData } = await supabase
       .from('attendance_records')
       .select('*')
@@ -92,7 +106,6 @@ export default function AdminDashboard() {
     const present = attendanceData?.filter(r => r.status === 'present').length || 0;
     const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
 
-    // Fetch leave stats
     const { data: leaveData } = await supabase
       .from('leave_requests')
       .select('*')
@@ -103,13 +116,13 @@ export default function AdminDashboard() {
     const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
     const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
     const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
-    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasion').length || 0;
+    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasions ').length || 0; 
     const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
     const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
 
     setStats({
       present,
-      absent: 0, // Calculate based on total students
+      absent: 0, 
       kitchen,
       emergencyLeave,
       jobInterviewsLeave,
@@ -121,7 +134,6 @@ export default function AdminDashboard() {
       healthPeriodLeave,
     });
 
-    // Check if QR code exists for today
     const { data: qrData } = await supabase
       .from('qr_codes')
       .select('*')
@@ -182,8 +194,7 @@ export default function AdminDashboard() {
 
   const fetchStudentRecords = async () => {
     setStudentsLoading(true);
-    
-    // Fetch all student profiles
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
@@ -196,21 +207,79 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Fetch all attendance records
-    const { data: attendance, error: attendanceError } = await supabase
+    const { data: attendanceData, error: attendanceError } = await supabase
       .from('attendance_records')
-      .select('student_id, status');
+      .select('student_id, status, attendance_date');
 
-    if (attendanceError) {
-      console.error('Error fetching attendance:', attendanceError);
+    const { data: approvedLeaveData, error: leaveError } = await supabase
+      .from('leave_requests')
+      .select('student_id, start_date, end_date, leave_type')
+      .eq('status', 'approved');
+
+    if (attendanceError || leaveError) {
+      console.error('Error fetching attendance or leaves:', attendanceError || leaveError);
     }
 
-    // Calculate attendance stats for each student
+    const allRecords: Record<string, any[]> = {};
+
+    profiles?.forEach(profile => {
+      allRecords[profile.id] = [];
+      const accountCreatedAt = profile.created_at ? new Date(profile.created_at) : new Date();
+
+      
+      attendanceData?.filter(a => a.student_id === profile.id)
+        .forEach(a => allRecords[profile.id].push({
+          date: a.attendance_date,
+          status: a.status === 'present' ? 'present' : a.status === 'kitchen_duty' ? 'kitchen' : 'unknown'
+        }));
+
+     
+      approvedLeaveData?.filter(l => l.student_id === profile.id)
+        .forEach(l => {
+          let currentDate = new Date(l.start_date);
+          const endDate = new Date(l.end_date);
+          
+          while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            if (!allRecords[profile.id].some(r => r.date === dateStr)) {
+               allRecords[profile.id].push({
+                  date: dateStr,
+                  status: 'leave'
+               });
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+        });
+        
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let currentDate = new Date(accountCreatedAt);
+      currentDate.setHours(0, 0, 0, 0);
+
+      while (currentDate < today) { 
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          if (!allRecords[profile.id].some(r => r.date === dateStr)) {
+              allRecords[profile.id].push({
+                  date: dateStr,
+                  status: 'absent'
+              });
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+      }
+    });
+
+   
     const records: StudentRecord[] = (profiles || []).map(profile => {
-      const studentAttendance = attendance?.filter(a => a.student_id === profile.id) || [];
-      const presentDays = studentAttendance.filter(a => a.status === 'present').length;
-      const totalDays = studentAttendance.length;
+      const studentHistory = allRecords[profile.id]?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
+      
+      const totalDays = studentHistory.length;
+      const presentDays = studentHistory.filter(r => r.status === 'present').length;
       const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+      
+      const latestRecord = studentHistory.length ? studentHistory[studentHistory.length - 1] : null;
 
       return {
         id: profile.id,
@@ -221,11 +290,97 @@ export default function AdminDashboard() {
         total_days: totalDays,
         present_days: presentDays,
         attendance_rate: Math.round(attendanceRate),
+        latest_status: latestRecord ? latestRecord.status : "no record",
+        latest_status_date: latestRecord ? latestRecord.date : null,
       };
     });
 
     setStudentRecords(records);
     setStudentsLoading(false);
+  };
+  
+  
+  const fetchDetailedStudentRecords = async (studentId: string) => {
+    setDetailsLoading(true);
+    
+    const { data: attendanceData } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('student_id', studentId);
+
+    const { data: leaveData } = await supabase
+      .from('leave_requests')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('status', 'approved');
+
+    let allRecords: any[] = [];
+
+    
+    attendanceData?.forEach((r) => {
+      allRecords.push({
+        from: r.attendance_date,
+        to: r.attendance_date,
+        status: r.status === "present" ? "Present" : r.status === "kitchen_duty" ? "Kitchen Duty" : "Unknown"
+      });
+    });
+
+    
+    leaveData?.forEach((l) => {
+      allRecords.push({
+        from: l.start_date,
+        to: l.end_date,
+        status: l.leave_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+      });
+    });
+
+   
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('id', studentId)
+      .maybeSingle();
+      
+    const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let d = new Date(accountCreatedAt); d < today; d.setDate(d.getDate() + 1)) {
+      const dateStr = format(d, "yyyy-MM-dd");
+      
+      const isCovered = allRecords.some(r => {
+          const start = new Date(r.from);
+          const end = new Date(r.to);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(0, 0, 0, 0);
+          
+          return d >= start && d <= end;
+      });
+      
+      if (!isCovered) {
+        allRecords.push({
+          from: dateStr,
+          to: dateStr,
+          status: "Absent"
+        });
+      }
+    }
+
+    allRecords.sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
+
+    setDetailedRecords(allRecords);
+    setDetailsLoading(false);
+  };
+
+  
+  const handleToggleReport = (studentId: string) => {
+    if (expandedStudentId === studentId) {
+      setExpandedStudentId(null);
+      setDetailedRecords([]);
+    } else {
+      setExpandedStudentId(studentId);
+      fetchDetailedStudentRecords(studentId);
+    }
   };
 
   const handleGenerateQR = async () => {
@@ -233,16 +388,16 @@ export default function AdminDashboard() {
 
     setLoading(true);
 
-    // Deactivate old QR codes
     await supabase
       .from('qr_codes')
       .update({ is_active: false })
       .eq('is_active', true);
 
-    // Generate new QR code
     const code = `ATT-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // Valid for 24 hours
+    const today = new Date().toISOString().split('T')[0];
+
 
     const { error } = await supabase
       .from('qr_codes')
@@ -250,6 +405,7 @@ export default function AdminDashboard() {
         code,
         generated_by: user.id,
         expires_at: expiresAt.toISOString(),
+        attendance_date: today,
       });
 
     if (error) {
@@ -280,6 +436,7 @@ export default function AdminDashboard() {
     } else {
       toast.success(`Leave approved for ${studentName}`);
       fetchPendingLeaves();
+      fetchStudentRecords();
     }
   };
 
@@ -306,7 +463,6 @@ export default function AdminDashboard() {
   const handleApproveCorrection = async (correctionId: string, studentId: string, attendanceDate: string, studentName: string) => {
     if (!user) return;
 
-    // Update correction request status
     const { error: updateError } = await supabase
       .from('attendance_correction_requests' as any)
       .update({
@@ -321,23 +477,27 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Create attendance record for the student
     const { error: insertError } = await supabase
       .from('attendance_records')
       .insert({
         student_id: studentId,
         attendance_date: attendanceDate,
         status: 'present'
-      });
+      }, { onConflict: 'student_id, attendance_date' });
 
     if (insertError) {
-      console.error('Error creating attendance record:', insertError);
-      toast.error("Correction approved but failed to mark attendance");
+      if (insertError.code === '23505') {
+        toast.success(`Correction approved for ${studentName}, attendance was already marked.`);
+      } else {
+        console.error('Error creating attendance record:', insertError);
+        toast.error("Correction approved but failed to mark attendance");
+      }
     } else {
       toast.success(`Attendance corrected for ${studentName}`);
     }
 
     fetchPendingCorrections();
+    fetchStudentRecords();
   };
 
   const handleRejectCorrection = async (correctionId: string, studentName: string) => {
@@ -372,16 +532,30 @@ export default function AdminDashboard() {
   };
 
   const filteredStudents = useMemo(() => {
-    if (!searchQuery.trim()) return studentRecords;
-    
-    const query = searchQuery.toLowerCase().trim();
-    return studentRecords.filter(student => 
-      student.full_name.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query) ||
-      student.roll_number?.toLowerCase().includes(query) ||
-      student.department?.toLowerCase().includes(query)
-    );
-  }, [searchQuery, studentRecords]);
+    return studentRecords.filter((student) => {
+      const matchesName =
+        student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.roll_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.department?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const studentDate = student.latest_status_date
+        ? new Date(student.latest_status_date)
+        : null;
+
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
+
+      const matchesDate =
+        (!from || (studentDate && studentDate >= from)) &&
+        (!to || (studentDate && studentDate <= to));
+
+      const matchesStatus =
+        filterStatus === "all" || student.latest_status === filterStatus;
+
+      return matchesName && matchesDate && matchesStatus;
+    });
+  }, [searchQuery, fromDate, toDate, filterStatus, studentRecords]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -391,7 +565,6 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Manage attendance, leaves, and student records.</p>
         </div>
 
-        {/* Overview Cards */}
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground">
             <div className="text-2xl font-bold mb-1">{stats.present}</div>
@@ -416,32 +589,31 @@ export default function AdminDashboard() {
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.documentationLeave}</div>
-            <div className="text-sm text-muted-foreground">documentation</div>
+            <div className="text-sm text-muted-foreground">Documentation</div>
           </Card>
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.collegeLeave}</div>
-            <div className="text-sm text-muted-foreground">college</div>
+            <div className="text-sm text-muted-foreground">College</div>
           </Card>
-           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.examLeave}</div>
-            <div className="text-sm text-muted-foreground">exam</div>
+            <div className="text-sm text-muted-foreground">Exam</div>
           </Card>
-           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.specialOccasionsLeave}</div>
-            <div className="text-sm text-muted-foreground">special_occasions</div>
+            <div className="text-sm text-muted-foreground">Special Occasions</div>
           </Card>
-           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.healthGeneralLeave}</div>
-            <div className="text-sm text-muted-foreground">health_general</div>
+            <div className="text-sm text-muted-foreground">Health General</div>
           </Card>
-           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
+          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.healthPeriodLeave}</div>
             <div className="text-sm text-muted-foreground">Health Period Leave</div>
           </Card>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* QR Code Generator */}
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
@@ -458,7 +630,7 @@ export default function AdminDashboard() {
                     {qrCode ? "Active QR code for attendance" : "Generate a new QR code for today"}
                   </div>
                 </div>
-                
+
                 <div className="w-64 h-64 mx-auto border-[3px] border-foreground bg-white flex items-center justify-center mb-4 p-4">
                   {qrCode ? (
                     <QRCodeSVG value={qrCode} size={224} level="H" />
@@ -472,9 +644,9 @@ export default function AdminDashboard() {
                     Expires: {new Date(qrExpiry).toLocaleString()}
                   </div>
                 )}
-                
-                <Button 
-                  size="lg" 
+
+                <Button
+                  size="lg"
                   onClick={handleGenerateQR}
                   className="w-full"
                   disabled={loading}
@@ -492,7 +664,6 @@ export default function AdminDashboard() {
             </div>
           </Card>
 
-          {/* Leave Approvals */}
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
@@ -511,30 +682,30 @@ export default function AdminDashboard() {
                   const startDate = new Date(leave.start_date);
                   const endDate = new Date(leave.end_date);
                   const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                  
+
                   return (
                     <div key={leave.id} className="p-4 border-[3px] border-foreground bg-background">
                       <div className="font-bold mb-1">{leave.profiles?.full_name || 'Unknown'}</div>
                       <div className="text-sm text-muted-foreground mb-2">
-                        {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1)} • Requested {new Date(leave.requested_at).toLocaleDateString()}
+                        {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1).replace(/_/g, " ")} • Requested {new Date(leave.requested_at).toLocaleDateString()}
                       </div>
                       <div className="text-sm font-medium mb-2 flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()} 
+                        {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
                         <span className="text-muted-foreground">({daysDiff} {daysDiff === 1 ? 'day' : 'days'})</span>
                       </div>
                       <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{leave.reason}</div>
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           onClick={() => handleApproveLeave(leave.id, leave.profiles?.full_name || 'Student')}
                           className="flex-1"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="destructive"
                           onClick={() => handleRejectLeave(leave.id, leave.profiles?.full_name || 'Student')}
                           className="flex-1"
@@ -550,7 +721,6 @@ export default function AdminDashboard() {
             </div>
           </Card>
 
-          {/* Attendance Correction Approvals */}
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
@@ -577,10 +747,10 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{correction.reason}</div>
                     <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => handleApproveCorrection(
-                          correction.id, 
+                          correction.id,
                           correction.student_id,
                           correction.attendance_date,
                           correction.profiles?.full_name || 'Student'
@@ -590,8 +760,8 @@ export default function AdminDashboard() {
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Approve & Mark Present
                       </Button>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="destructive"
                         onClick={() => handleRejectCorrection(correction.id, correction.profiles?.full_name || 'Student')}
                         className="flex-1"
@@ -607,7 +777,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Student Records */}
         <Card className="mt-6 p-6 border-[3px] border-foreground shadow-brutal bg-card">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-primary p-2 border-[3px] border-foreground">
@@ -616,13 +785,42 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold">Student Records</h2>
           </div>
 
-          <div className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
             <Input
-              placeholder="Search students by name, email, roll number, or department..."
+              type="text"
+              placeholder="Search by Name, Email, Roll No..."
               value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="border-[3px] border-foreground h-12 shadow-brutal-sm"
             />
+
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border-[3px] border-foreground h-12 shadow-brutal-sm"
+            />
+
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border-[3px] border-foreground h-12 shadow-brutal-sm"
+            />
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border-[3px] border-foreground h-12 shadow-brutal-sm px-3"
+            >
+              <option value="all">All</option>
+              <option value="present">Present</option>
+              <option value="leave">On Leave</option>
+              <option value="kitchen">Kitchen Duty</option>
+              <option value="absent">Absent</option>
+            </select>
+
           </div>
 
           {studentsLoading ? (
@@ -632,7 +830,7 @@ export default function AdminDashboard() {
           ) : filteredStudents.length === 0 ? (
             <div className="flex items-center justify-center py-12 border-[3px] border-foreground bg-muted">
               <p className="text-muted-foreground">
-                {searchQuery ? 'No students found matching your search' : 'No student records available'}
+                {searchQuery || fromDate || toDate || filterStatus !== 'all' ? 'No students found matching your filters' : 'No student records available'}
               </p>
             </div>
           ) : (
@@ -644,30 +842,115 @@ export default function AdminDashboard() {
                     <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Roll Number</th>
                     <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Department</th>
                     <th className="px-4 py-3 text-left font-bold border-b-[3px] border-r-[3px] border-foreground">Email</th>
-                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-r-[3px] border-foreground">Present Days</th>
-                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-foreground">Attendance %</th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-r-[3px] border-foreground">
+                      Attendance %
+                    </th>
+                    <th className="px-4 py-3 text-center font-bold border-b-[3px] border-foreground">
+                      Action
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="bg-background">
                   {filteredStudents.map((student, index) => (
-                    <tr key={student.id} className={index % 2 === 0 ? 'bg-background' : 'bg-muted'}>
-                      <td className="px-4 py-3 font-medium border-r-[3px] border-foreground">{student.full_name}</td>
-                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.roll_number || '-'}</td>
-                      <td className="px-4 py-3 border-r-[3px] border-foreground">{student.department || '-'}</td>
-                      <td className="px-4 py-3 border-r-[3px] border-foreground text-sm">{student.email}</td>
-                      <td className="px-4 py-3 text-center font-bold border-r-[3px] border-foreground">
-                        {student.present_days}/{student.total_days}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`font-bold ${
-                          student.attendance_rate >= 75 ? 'text-green-600' :
-                          student.attendance_rate >= 50 ? 'text-yellow-600' :
-                          'text-red-600'
-                        }`}>
-                          {student.attendance_rate}%
-                        </span>
-                      </td>
-                    </tr>
+                    <React.Fragment key={student.id}>
+                      <tr
+                        className={cn(
+                          index % 2 === 0 ? "bg-background" : "bg-muted",
+                          expandedStudentId === student.id && "border-b-[4px] border-primary/50"
+                        )}
+                      >
+                       
+                        <td className="px-4 py-3 font-medium border-r-[3px] border-foreground">
+                          {student.full_name}
+                        </td>
+
+                        
+                        <td className="px-4 py-3 border-r-[3px] border-foreground">
+                          {student.roll_number || "-"}
+                        </td>
+
+                        
+                        <td className="px-4 py-3 border-r-[3px] border-foreground">
+                          {student.department || "-"}
+                        </td>
+
+                       
+                        <td className="px-4 py-3 border-r-[3px] border-foreground text-sm">
+                          {student.email}
+                        </td>
+                        
+                        
+                        <td className="px-4 py-3 text-center border-r-[3px] border-foreground">
+                          <span 
+                            className={`font-bold ${student.attendance_rate >= 75 ? 'text-green-600' :
+                              student.attendance_rate >= 50 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}
+                          >
+                            {student.attendance_rate}%
+                          </span>
+                        </td>
+                          
+                       
+                        <td className="px-4 py-3 text-center">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleToggleReport(student.id)}
+                            className="w-full"
+                            disabled={detailsLoading}
+                          >
+                            {expandedStudentId === student.id ? 'Hide Report' : 'View Report'}
+                          </Button>
+                        </td>
+                      </tr>
+
+                      
+                      {expandedStudentId === student.id && (
+                        <tr className={index % 2 === 0 ? "bg-background/90" : "bg-muted/90"}>
+                          <td colSpan={6} className="p-4 border-t-0">
+                            {detailsLoading ? (
+                              <div className="flex items-center justify-center py-4 text-muted-foreground">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Loading detailed history...
+                              </div>
+                            ) : detailedRecords.length === 0 ? (
+                              <p className="text-center text-muted-foreground py-4">No detailed history available.</p>
+                            ) : (
+                              <div className="max-h-60 overflow-y-auto border border-dashed border-foreground/50 p-2">
+                                <h4 className="font-bold mb-2 text-sm">Attendance History (Total Days: {detailedRecords.length}):</h4>
+                                <table className="w-full text-left table-fixed">
+                                  <thead>
+                                    <tr className="text-xs text-muted-foreground border-b border-foreground/30">
+                                      <th className="w-1/3 py-1">Date From</th>
+                                      <th className="w-1/3 py-1">Date To</th>
+                                      <th className="w-1/3 py-1">Status / Leave Type</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {detailedRecords.map((rec, idx) => (
+                                      <tr key={idx} className="text-xs">
+                                        <td className="py-1">{format(new Date(rec.from), 'MM/dd/yyyy')}</td>
+                                        <td className="py-1">{format(new Date(rec.to), 'MM/dd/yyyy')}</td>
+                                        <td className={cn(
+                                            "font-medium capitalize",
+                                            rec.status.toLowerCase().includes("present") && "text-green-600",
+                                            rec.status.toLowerCase() === "absent" && "text-red-600",
+                                            rec.status.toLowerCase().includes("leave") && "text-yellow-700"
+                                        )}>
+                                          {rec.status}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -675,7 +958,7 @@ export default function AdminDashboard() {
           )}
         </Card>
 
-        {/* Reports & Lifecycle */}
+        
         <div className="grid lg:grid-cols-2 gap-6 mt-6">
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
@@ -724,3 +1007,13 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
