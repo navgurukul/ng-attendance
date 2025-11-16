@@ -587,7 +587,6 @@ export default function AdminDashboard() {
             <div className="text-2xl font-bold mb-1">{stats.jobInterviewsLeave}</div>
             <div className="text-sm text-muted-foreground">Job Interviews Leave</div>
           </Card>
-
           <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="text-2xl font-bold mb-1">{stats.documentationLeave}</div>
             <div className="text-sm text-muted-foreground">Documentation</div>
