@@ -38,8 +38,9 @@ export default function QRScanner() {
 
     setTimeout(() => {
       const screenWidth = window.innerWidth;
+
       const qrboxSize =
-        screenWidth < 640 ? Math.min(screenWidth - 80, 250) : 250;
+        screenWidth < 480 ? screenWidth - 50 : screenWidth < 768 ? 280 : 300;
 
       const scanner = new Html5QrcodeScanner(
         "qr-reader",
@@ -105,14 +106,19 @@ export default function QRScanner() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    
+        <div className="flex w-full min-h-screen bg-background">
+
       <StudentSidebar />
+      
+            <div className="flex-1 px-4 py-6 md:px-8 md:py-10">
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-4">Scan Attendance</h1>
-        <p className="text-muted-foreground mb-6">Scan the QR code to mark attendance.</p>
+        <h1 className="text-3xl font-bold mb-4 text-center">Scan Attendance</h1>
+        <p className="text-muted-foreground mb-6 text-center">Scan the QR code to mark attendance.</p>
 
-        <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+      
+                <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
+
 
           <div className="text-center mb-6">
             <div className="text-lg font-bold">Today's Attendance</div>
@@ -124,7 +130,9 @@ export default function QRScanner() {
           {!todayMarked ? (
             !scanning ? (
               <>
-                <div className="w-48 h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
+                
+                                <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
+
                   <Camera className="h-32 w-32 text-muted-foreground" />
                 </div>
 
@@ -139,7 +147,9 @@ export default function QRScanner() {
                 </Button>
               </>
             ) : (
-              <div id="qr-reader" className="w-full mt-4"></div>
+              
+                            <div id="qr-reader" className="w-full mt-4 rounded-md overflow-hidden"></div>
+
             )
           ) : (
             <div className="text-center py-8">
