@@ -16,74 +16,91 @@ export default function ViewHistory() {
     const [reportToDate, setReportToDate] = useState<Date>();
     const [filteredRecords, setFilteredRecords] = useState<any[]>([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const recordsPerPage = 10;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [reportStatus, reportFromDate, reportToDate]);
+
     useEffect(() => {
         if (!user) return;
 
         const fetchRecords = async () => {
             const { data: attendanceData } = await supabase
-                .from('attendance_records')
-                .select('*')
-                .eq('student_id', user.id);
+                .from("attendance_records")
+                .select("*")
+                .eq("student_id", user.id);
 
             const { data: leaveData } = await supabase
-                .from('leave_requests')
-                .select('*')
-                .eq('student_id', user.id)
-                .eq('status', 'approved');
+                .from("leave_requests")
+                .select("*")
+                .eq("student_id", user.id)
+                .eq("status", "approved");
 
             let allRecords: any[] = [];
-
 
             attendanceData?.forEach((r) => {
                 allRecords.push({
                     from: r.attendance_date,
                     to: r.attendance_date,
-                    status: r.status === "present" ? "Present" : r.status === "kitchen_duty" ? "Kitchen Duty" : "Unknown"
+                    status:
+                        r.status === "present"
+                            ? "Present"
+                            : r.status === "kitchen_duty"
+                                ? "Kitchen Duty"
+                                : "Unknown",
                 });
             });
-
 
             leaveData?.forEach((l) => {
                 allRecords.push({
                     from: l.start_date,
                     to: l.end_date,
-                    status: l.leave_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+                    status: l.leave_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
                 });
             });
 
-
             const { data: profileData } = await supabase
-                .from('profiles')
-                .select('created_at')
-                .eq('id', user.id)
+                .from("profiles")
+                .select("created_at")
+                .eq("id", user.id)
                 .maybeSingle();
+
             const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : new Date();
             const today = new Date();
+
             for (let d = new Date(accountCreatedAt); d <= today; d.setDate(d.getDate() + 1)) {
                 const dateStr = format(d, "yyyy-MM-dd");
-                if (!allRecords.some(r => dateStr >= r.from && dateStr <= r.to)) {
+                if (!allRecords.some((r) => dateStr >= r.from && dateStr <= r.to)) {
                     allRecords.push({
                         from: dateStr,
                         to: dateStr,
-                        status: "Absent"
+                        status: "Absent",
                     });
                 }
             }
 
 
             let filtered = allRecords;
-            if (reportStatus && reportStatus !== "all") {
-                filtered = filtered.filter(r => {
+
+            if (reportStatus !== "all") {
+                filtered = filtered.filter((r) => {
                     switch (reportStatus) {
                         case "present":
                             return r.status.toLowerCase() === "present";
                         case "kitchen_duty":
                             return r.status.toLowerCase() === "kitchen duty";
                         case "leave":
-
                             const leaveTypes = [
-                                "emergency", "job interview", "documentation", "college",
-                                "exam", "special occasion", "health general", "health period"
+                                "emergency",
+                                "job interview",
+                                "documentation",
+                                "college",
+                                "exam",
+                                "special occasion",
+                                "health general",
+                                "health period",
                             ];
                             return leaveTypes.includes(r.status.toLowerCase());
                         case "absent":
@@ -101,21 +118,16 @@ export default function ViewHistory() {
 
             if (reportFromDate) {
                 const from = normalize(reportFromDate);
-                filtered = filtered.filter(r => {
-                    const recFrom = normalize(r.from);
-                    return recFrom >= from;
-                });
+                filtered = filtered.filter((r) => normalize(r.from) >= from);
             }
 
             if (reportToDate) {
                 const to = normalize(reportToDate);
-                filtered = filtered.filter(r => {
-                    const recTo = normalize(r.to);
-                    return recTo <= to;
-                });
+                filtered = filtered.filter((r) => normalize(r.to) <= to);
             }
 
             filtered.sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
+
             setFilteredRecords(filtered);
         };
 
@@ -123,62 +135,69 @@ export default function ViewHistory() {
     }, [user, reportStatus, reportFromDate, reportToDate]);
 
     useEffect(() => {
-        if (user) {
-            fetchAttendanceData();
-        }
+        if (user) fetchAttendanceData();
     }, [user]);
 
     const fetchAttendanceData = async () => {
         if (!user) return;
 
-
         const { data: profileData } = await supabase
-            .from('profiles')
-            .select('created_at')
-            .eq('id', user.id)
+            .from("profiles")
+            .select("created_at")
+            .eq("id", user.id)
             .maybeSingle();
 
         const { data, error } = await supabase
-            .from('attendance_records')
-            .select('*')
-            .eq('student_id', user.id);
+            .from("attendance_records")
+            .select("*")
+            .eq("student_id", user.id);
 
-        if (error) {
-            console.error('Error fetching attendance:', error);
-            return;
-        }
+        if (error) return;
 
-        const present = data?.filter(r => r.status === 'present').length || 0;
-        const kitchenDuty = data?.filter(r => r.status === 'kitchen_duty').length || 0;
+        const present = data?.filter((r) => r.status === "present").length || 0;
+        const kitchenDuty = data?.filter((r) => r.status === "kitchen_duty").length || 0;
 
         const { data: leaveData } = await supabase
-            .from('leave_requests')
-            .select('*')
-            .eq('student_id', user.id)
-            .eq('status', 'approved');
+            .from("leave_requests")
+            .select("*")
+            .eq("student_id", user.id)
+            .eq("status", "approved");
 
         const leaves = leaveData?.length || 0;
 
         const now = new Date();
         const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : now;
-        const elapsedDays = Math.max(1, Math.floor((now.getTime() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-
+        const elapsedDays = Math.max(1, Math.floor((now.getTime() - accountCreatedAt.getTime()) / 86400000) + 1);
 
         const daysWithRecord = present + kitchenDuty + leaves;
         const absent = Math.max(0, elapsedDays - daysWithRecord);
 
-
-        const percentage = elapsedDays > 0 ? Math.round((present / elapsedDays) * 100) : 0;
+        const percentage = Math.round((present / elapsedDays) * 100);
 
         setStats({ present, absent, leaves, kitchenDuty, percentage });
     };
 
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+
+    const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
     return (
-        <div className="min-h-screen bg-background flex">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row">
             <StudentSidebar />
+
             <div className="container mx-auto p-6">
-                <h1 className="text-3xl font-bold mb-6">View History</h1>
-                <div className="grid md:grid-cols-5 gap-4 mb-8">
+                <h1 className="text-3xl font-bold mb-6 justify-center items-center flex">View Attendance Reports History</h1>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
                     <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
                         <div className="text-3xl font-bold mb-1">{stats.present}</div>
                         <div className="text-sm text-muted-foreground">Days Present</div>
@@ -201,14 +220,7 @@ export default function ViewHistory() {
                     </Card>
                 </div>
 
-
-
-
-
-                <h1 className="text-center text-2xl font-semibold mb-6">
-                    Attendance Reports
-                </h1>
-                <div className="flex flex-wrap justify-center items-center gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 mb-6">
                     <select
                         value={reportStatus}
                         onChange={(e) => setReportStatus(e.target.value as any)}
@@ -227,11 +239,7 @@ export default function ViewHistory() {
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent>
-                            <Calendar
-                                mode="single"
-                                selected={reportFromDate}
-                                onSelect={setReportFromDate}
-                            />
+                            <Calendar mode="single" selected={reportFromDate} onSelect={setReportFromDate} />
                         </PopoverContent>
                     </Popover>
 
@@ -242,21 +250,14 @@ export default function ViewHistory() {
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent>
-                            <Calendar
-                                mode="single"
-                                selected={reportToDate}
-                                onSelect={setReportToDate}
-                            />
+                            <Calendar mode="single" selected={reportToDate} onSelect={setReportToDate} />
                         </PopoverContent>
                     </Popover>
                 </div>
-
                 {filteredRecords.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground">
-                        No records found for selected filters.
-                    </p>
+                    <p className="text-center text-sm text-muted-foreground">No records found for selected filters.</p>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto mb-6">
                         <table className="w-full border-collapse border-[2px] border-foreground">
                             <thead className="bg-gray-100">
                                 <tr>
@@ -266,7 +267,7 @@ export default function ViewHistory() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredRecords.map((rec, idx) => (
+                                {currentRecords.map((rec, idx) => (
                                     <tr key={idx} className="text-sm text-center">
                                         <td className="border-[2px] border-foreground px-2 py-2">
                                             {new Date(rec.from).toLocaleDateString()}
@@ -281,6 +282,22 @@ export default function ViewHistory() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {filteredRecords.length > 0 && (
+                    <div className="flex justify-center items-center gap-4">
+                        <Button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2">
+                            Previous
+                        </Button>
+
+                        <span className="text-sm">
+                            Page {currentPage} of {totalPages}
+                        </span>
+
+                        <Button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2">
+                            Next
+                        </Button>
                     </div>
                 )}
             </div>
