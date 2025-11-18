@@ -11,6 +11,12 @@ import Signup from "./pages/Signup";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import CorrectionRequestForm from "./pages/CorrectionRequest";
+import LeaveRequest from "./pages/LeaveRequest";
+import ViewHistory from "./pages/ViewHistory";
+import KitchenDuty from "./pages/KitchenDuty";
+import QRScanner from "./pages/QRScanner";
+
 
 const queryClient = new QueryClient();
 
@@ -37,8 +43,8 @@ function AppRoutes() {
 
   return (
     <>
-      <Navbar 
-        isAuthenticated={!!user} 
+      <Navbar
+        isAuthenticated={!!user}
         userRole={role || 'student'}
         onLogout={signOut}
       />
@@ -46,21 +52,66 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={user ? <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace /> : <Signup />} />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute requiredRole="student">
               <StudentDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/admin" 
+        <Route
+          path="/student/correction"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <CorrectionRequestForm />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/leave"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <LeaveRequest />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/view-history"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <ViewHistory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/kitchen-duty"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <KitchenDuty />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/student/qr-scanner"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <QRScanner />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
