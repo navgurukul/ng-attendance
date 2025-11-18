@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom"; 
 
 
+
 interface LeaveRequest {
   id: string;
   student_id: string;
@@ -87,6 +88,8 @@ export default function AdminDashboard() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  const [totalCumulativePresent, setTotalCumulativePresent] = useState(0);
 
   const navigate = useNavigate();
 
@@ -299,6 +302,10 @@ export default function AdminDashboard() {
         latest_status_date: latestRecord ? latestRecord.date : null,
       };
     });
+
+
+    const totalPresentAcrossAllStudents = records.reduce((sum, student) => sum + student.present_days, 0);
+    setTotalCumulativePresent(totalPresentAcrossAllStudents);
 
     setStudentRecords(records);
     setStudentsLoading(false);
