@@ -10,6 +10,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { z } from "zod";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom"; 
+
 
 interface LeaveRequest {
   id: string;
@@ -49,6 +51,12 @@ interface StudentRecord {
   latest_status_date: string | null;
 }
 
+interface DetailedRecord {
+  from: string;
+  to: string;
+  status: string;
+}
+
 
 const searchQuerySchema = z.string().max(100, "Search query too long");
 
@@ -76,15 +84,11 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(false);
 
-  
-  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null); 
-  const [detailedRecords, setDetailedRecords] = useState<any[]>([]);          
-  const [detailsLoading, setDetailsLoading] = useState(false);                 
-
-
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -97,6 +101,7 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     const today = new Date().toISOString().split('T')[0];
+
 
     const { data: attendanceData } = await supabase
       .from('attendance_records')
@@ -116,7 +121,7 @@ export default function AdminDashboard() {
     const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
     const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
     const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
-    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasions ').length || 0; 
+    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasions ').length || 0;
     const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
     const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
 
@@ -226,59 +231,59 @@ export default function AdminDashboard() {
       allRecords[profile.id] = [];
       const accountCreatedAt = profile.created_at ? new Date(profile.created_at) : new Date();
 
-      
+
       attendanceData?.filter(a => a.student_id === profile.id)
         .forEach(a => allRecords[profile.id].push({
           date: a.attendance_date,
           status: a.status === 'present' ? 'present' : a.status === 'kitchen_duty' ? 'kitchen' : 'unknown'
         }));
 
-     
+
       approvedLeaveData?.filter(l => l.student_id === profile.id)
         .forEach(l => {
           let currentDate = new Date(l.start_date);
           const endDate = new Date(l.end_date);
-          
+
           while (currentDate <= endDate) {
             const dateStr = currentDate.toISOString().split('T')[0];
-            
+
             if (!allRecords[profile.id].some(r => r.date === dateStr)) {
-               allRecords[profile.id].push({
-                  date: dateStr,
-                  status: 'leave'
-               });
+              allRecords[profile.id].push({
+                date: dateStr,
+                status: 'leave'
+              });
             }
             currentDate.setDate(currentDate.getDate() + 1);
           }
         });
-        
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       let currentDate = new Date(accountCreatedAt);
       currentDate.setHours(0, 0, 0, 0);
 
-      while (currentDate < today) { 
-          const dateStr = currentDate.toISOString().split('T')[0];
-          
-          if (!allRecords[profile.id].some(r => r.date === dateStr)) {
-              allRecords[profile.id].push({
-                  date: dateStr,
-                  status: 'absent'
-              });
-          }
-          currentDate.setDate(currentDate.getDate() + 1);
+      while (currentDate < today) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+
+        if (!allRecords[profile.id].some(r => r.date === dateStr)) {
+          allRecords[profile.id].push({
+            date: dateStr,
+            status: 'absent'
+          });
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
       }
     });
 
-   
+
     const records: StudentRecord[] = (profiles || []).map(profile => {
       const studentHistory = allRecords[profile.id]?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
-      
+
       const totalDays = studentHistory.length;
       const presentDays = studentHistory.filter(r => r.status === 'present').length;
       const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
-      
+
       const latestRecord = studentHistory.length ? studentHistory[studentHistory.length - 1] : null;
 
       return {
@@ -298,90 +303,8 @@ export default function AdminDashboard() {
     setStudentRecords(records);
     setStudentsLoading(false);
   };
-  
-  
-  const fetchDetailedStudentRecords = async (studentId: string) => {
-    setDetailsLoading(true);
-    
-    const { data: attendanceData } = await supabase
-      .from('attendance_records')
-      .select('*')
-      .eq('student_id', studentId);
 
-    const { data: leaveData } = await supabase
-      .from('leave_requests')
-      .select('*')
-      .eq('student_id', studentId)
-      .eq('status', 'approved');
 
-    let allRecords: any[] = [];
-
-    
-    attendanceData?.forEach((r) => {
-      allRecords.push({
-        from: r.attendance_date,
-        to: r.attendance_date,
-        status: r.status === "present" ? "Present" : r.status === "kitchen_duty" ? "Kitchen Duty" : "Unknown"
-      });
-    });
-
-    
-    leaveData?.forEach((l) => {
-      allRecords.push({
-        from: l.start_date,
-        to: l.end_date,
-        status: l.leave_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-      });
-    });
-
-   
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('created_at')
-      .eq('id', studentId)
-      .maybeSingle();
-      
-    const accountCreatedAt = profileData?.created_at ? new Date(profileData.created_at) : new Date();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let d = new Date(accountCreatedAt); d < today; d.setDate(d.getDate() + 1)) {
-      const dateStr = format(d, "yyyy-MM-dd");
-      
-      const isCovered = allRecords.some(r => {
-          const start = new Date(r.from);
-          const end = new Date(r.to);
-          start.setHours(0, 0, 0, 0);
-          end.setHours(0, 0, 0, 0);
-          
-          return d >= start && d <= end;
-      });
-      
-      if (!isCovered) {
-        allRecords.push({
-          from: dateStr,
-          to: dateStr,
-          status: "Absent"
-        });
-      }
-    }
-
-    allRecords.sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime());
-
-    setDetailedRecords(allRecords);
-    setDetailsLoading(false);
-  };
-
-  
-  const handleToggleReport = (studentId: string) => {
-    if (expandedStudentId === studentId) {
-      setExpandedStudentId(null);
-      setDetailedRecords([]);
-    } else {
-      setExpandedStudentId(studentId);
-      fetchDetailedStudentRecords(studentId);
-    }
-  };
 
   const handleGenerateQR = async () => {
     if (!user) return;
@@ -395,7 +318,7 @@ export default function AdminDashboard() {
 
     const code = `ATT-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Valid for 24 hours
+    expiresAt.setHours(expiresAt.getHours() + 24); 
     const today = new Date().toISOString().split('T')[0];
 
 
@@ -519,6 +442,15 @@ export default function AdminDashboard() {
       fetchPendingCorrections();
     }
   };
+
+
+  const handleViewReport = (studentId: string, studentName: string) => {
+    toast.info(`Navigating to detailed report for ${studentName}...`);
+    
+    navigate(`/admin/student-report/${studentId}`); 
+  };
+  
+
 
   const handleExportReport = () => {
     toast.info("Report export feature coming soon!");
@@ -791,7 +723,7 @@ export default function AdminDashboard() {
               type="text"
               placeholder="Search by Name, Email, Roll No..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)} // Updated to use the handler
               className="border-[3px] border-foreground h-12 shadow-brutal-sm"
             />
 
@@ -855,101 +787,53 @@ export default function AdminDashboard() {
                   {filteredStudents.map((student, index) => (
                     <React.Fragment key={student.id}>
                       <tr
-                        className={cn(
-                          index % 2 === 0 ? "bg-background" : "bg-muted",
-                          expandedStudentId === student.id && "border-b-[4px] border-primary/50"
-                        )}
+                        className={index % 2 === 0 ? "bg-background" : "bg-muted"}
                       >
-                       
+
                         <td className="px-4 py-3 font-medium border-r-[3px] border-foreground">
                           {student.full_name}
                         </td>
 
-                        
+
                         <td className="px-4 py-3 border-r-[3px] border-foreground">
                           {student.roll_number || "-"}
                         </td>
 
-                        
+
                         <td className="px-4 py-3 border-r-[3px] border-foreground">
                           {student.department || "-"}
                         </td>
 
-                       
+
                         <td className="px-4 py-3 border-r-[3px] border-foreground text-sm">
                           {student.email}
                         </td>
-                        
-                        
+
+
                         <td className="px-4 py-3 text-center border-r-[3px] border-foreground">
-                          <span 
-                            className={`font-bold ${student.attendance_rate >= 75 ? 'text-green-600' :
-                              student.attendance_rate >= 50 ? 'text-yellow-600' :
+                          <span
+                            className={`font-bold ${student.attendance_rate >= 75 ? 'text-green-600' :                              student.attendance_rate >= 50 ? 'text-yellow-600' :
                                 'text-red-600'
-                              }`}
-                          >
+                              }`}                          >
                             {student.attendance_rate}%
                           </span>
                         </td>
-                          
-                       
+
+
                         <td className="px-4 py-3 text-center">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleToggleReport(student.id)}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            
+                            onClick={() => handleViewReport(student.id, student.full_name)}
                             className="w-full"
-                            disabled={detailsLoading}
                           >
-                            {expandedStudentId === student.id ? 'Hide Report' : 'View Report'}
+                            View Report
                           </Button>
                         </td>
-                      </tr>
 
-                      
-                      {expandedStudentId === student.id && (
-                        <tr className={index % 2 === 0 ? "bg-background/90" : "bg-muted/90"}>
-                          <td colSpan={6} className="p-4 border-t-0">
-                            {detailsLoading ? (
-                              <div className="flex items-center justify-center py-4 text-muted-foreground">
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                Loading detailed history...
-                              </div>
-                            ) : detailedRecords.length === 0 ? (
-                              <p className="text-center text-muted-foreground py-4">No detailed history available.</p>
-                            ) : (
-                              <div className="max-h-60 overflow-y-auto border border-dashed border-foreground/50 p-2">
-                                <h4 className="font-bold mb-2 text-sm">Attendance History (Total Days: {detailedRecords.length}):</h4>
-                                <table className="w-full text-left table-fixed">
-                                  <thead>
-                                    <tr className="text-xs text-muted-foreground border-b border-foreground/30">
-                                      <th className="w-1/3 py-1">Date From</th>
-                                      <th className="w-1/3 py-1">Date To</th>
-                                      <th className="w-1/3 py-1">Status / Leave Type</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {detailedRecords.map((rec, idx) => (
-                                      <tr key={idx} className="text-xs">
-                                        <td className="py-1">{format(new Date(rec.from), 'MM/dd/yyyy')}</td>
-                                        <td className="py-1">{format(new Date(rec.to), 'MM/dd/yyyy')}</td>
-                                        <td className={cn(
-                                            "font-medium capitalize",
-                                            rec.status.toLowerCase().includes("present") && "text-green-600",
-                                            rec.status.toLowerCase() === "absent" && "text-red-600",
-                                            rec.status.toLowerCase().includes("leave") && "text-yellow-700"
-                                        )}>
-                                          {rec.status}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
+
+                      </tr>
                     </React.Fragment>
                   ))}
                 </tbody>
@@ -958,7 +842,7 @@ export default function AdminDashboard() {
           )}
         </Card>
 
-        
+
         <div className="grid lg:grid-cols-2 gap-6 mt-6">
           <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
@@ -1007,13 +891,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
