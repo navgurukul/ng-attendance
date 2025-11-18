@@ -102,58 +102,132 @@ export default function AdminDashboard() {
     }
   }, [user]);
 
-  const fetchDashboardData = async () => {
-    const today = new Date().toISOString().split('T')[0];
+  // const fetchDashboardData = async () => {
+  //   const today = new Date().toISOString().split('T')[0];
 
 
-    const { data: attendanceData } = await supabase
-      .from('attendance_records')
-      .select('*')
-      .eq('attendance_date', today);
+  //   const { data: attendanceData } = await supabase
+  //     .from('attendance_records')
+  //     .select('*')
+  //     .eq('attendance_date', today);
 
-    const present = attendanceData?.filter(r => r.status === 'present').length || 0;
-    const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
+  //   const present = attendanceData?.filter(r => r.status === 'present').length || 0;
+  //   const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
 
-    const { data: leaveData } = await supabase
-      .from('leave_requests')
-      .select('*')
-      .eq('status', 'approved');
+  //   const { data: leaveData } = await supabase
+  //     .from('leave_requests')
+  //     .select('*')
+  //     .eq('status', 'approved');
 
-    const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
-    const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'job_interview').length || 0;
-    const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
-    const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
-    const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
-    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasions ').length || 0;
-    const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
-    const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
+  //   const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
+  //   const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'job_interview').length || 0;
+  //   const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
+  //   const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
+  //   const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
+  //   const specialOccasionsLeave = leaveData?.filter(l => l.leave_type === 'special_occasions ').length || 0;
+  //   const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
+  //   const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
 
-    setStats({
-      present,
-      absent: 0, 
-      kitchen,
-      emergencyLeave,
-      jobInterviewsLeave,
-      documentationLeave,
-      collegeLeave,
-      examLeave,
-      specialOccasionsLeave,
-      healthGeneralLeave,
-      healthPeriodLeave,
-    });
+  //   setStats({
+  //     present,
+  //     absent: 0, 
+  //     kitchen,
+  //     emergencyLeave,
+  //     jobInterviewsLeave,
+  //     documentationLeave,
+  //     collegeLeave,
+  //     examLeave,
+  //     specialOccasionsLeave,
+  //     healthGeneralLeave,
+  //     healthPeriodLeave,
+  //   });
 
-    const { data: qrData } = await supabase
-      .from('qr_codes')
-      .select('*')
-      .eq('attendance_date', today)
-      .eq('is_active', true)
-      .maybeSingle();
+  //   const { data: qrData } = await supabase
+  //     .from('qr_codes')
+  //     .select('*')
+  //     .eq('attendance_date', today)
+  //     .eq('is_active', true)
+  //     .maybeSingle();
 
-    if (qrData) {
-      setQrCode(qrData.code);
-      setQrExpiry(qrData.expires_at);
+  //   if (qrData) {
+  //     setQrCode(qrData.code);
+  //     setQrExpiry(qrData.expires_at);
+  //   }
+  // };
+
+
+const fetchDashboardData = async () => {
+  const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD' format
+
+  // 1. Fetch Today's Attendance Data
+  const { data: attendanceData } = await supabase
+    .from('attendance_records')
+    .select('*')
+    .eq('attendance_date', today);
+
+  const present = attendanceData?.filter(r => r.status === 'present').length || 0;
+  const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
+  
+  // Note: 'absent' count calculation is missing in original code, it's set to 0. 
+  // Calculating it accurately requires total expected attendance - present - leaves.
+  // For now, it remains 0 as per your original logic.
+
+  // 2. Fetch Approved Leave Data for the Current Date (Today)
+  const { data: leaveData, error: leaveError } = await supabase
+    .from('leave_requests')
+    .select('leave_type')
+    .eq('status', 'approved')
+    // Filter for leaves where today's date is between start_date and end_date (inclusive)
+    .lte('start_date', today) // start_date <= today
+    .gte('end_date', today); // end_date >= today
+    
+    if (leaveError) {
+        console.error('Error fetching approved leaves for today:', leaveError);
+        // Fallback or handle error gracefully
     }
-  };
+
+  // Count the specific leave types for today's approved leaves
+  const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
+  const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'job_interview').length || 0;
+  const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
+  const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
+  const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
+  // NOTE: Corrected potential typo in 'special_occasions ' -> 'special_occasions'
+  const specialOccasionsLeave = leaveData?.filter(l => l.leave_type.trim() === 'special_occasions').length || 0;
+  const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
+  const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
+
+  setStats({
+    present,
+    absent: 0, // Keep as 0, or implement full absent calculation logic (requires total users)
+    kitchen,
+    emergencyLeave,
+    jobInterviewsLeave,
+    documentationLeave,
+    collegeLeave,
+    examLeave,
+    specialOccasionsLeave,
+    healthGeneralLeave,
+    healthPeriodLeave,
+  });
+
+  // 3. Fetch QR Code data (No change needed here)
+  const { data: qrData } = await supabase
+    .from('qr_codes')
+    .select('*')
+    .eq('attendance_date', today)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (qrData) {
+    setQrCode(qrData.code);
+    setQrExpiry(qrData.expires_at);
+  } else {
+    setQrCode("");
+    setQrExpiry("");
+  }
+};
+
 
   const fetchPendingLeaves = async () => {
     const { data, error } = await supabase
