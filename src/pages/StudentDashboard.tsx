@@ -70,7 +70,7 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-background flex">
       <StudentSidebar />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8  text-center flex flex-col items-center">
 
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
@@ -79,12 +79,12 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        <Card className="w-full max-w-md shadow-lg border border-gray-300 bg-white">
+        <Card className="w-full max-w-md shadow-lg border border-gray-300 bg-white min-h-[300px] flex items-center justify-center">
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-2">{statusLabel}</h2>
+            <h2 className="text-3xl font-bold mb-2">{statusLabel}</h2>
 
             <p
-              className={`text-xl font-semibold ${
+              className={`text-2xl font-semibold ${
                 statusText === "Present"
                   ? "text-green-600"
                   : statusText === "Kitchen Duty"
