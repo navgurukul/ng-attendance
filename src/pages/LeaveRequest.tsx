@@ -115,19 +115,23 @@ export default function LeaveRequest() {
 
         setLoading(false);
     };
-
     return (
-        <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
+        <div className="w-full md:w-auto">
             <StudentSidebar />
-            <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+        </div>
+        <div className="flex-1 p-2 md:p-6 flex justify-center">
+            <Card className="w-full max-w-3xl p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card">
+                
                 <div className="flex items-center gap-3 mb-6">
                     <div className="bg-primary p-2 border-[3px] border-foreground">
                         <CalendarIcon className="h-6 w-6 text-primary-foreground" />
                     </div>
-                    <h2 className="text-2xl font-bold">Request Leave</h2>
+                    <h2 className="text-xl md:text-2xl font-bold">Request Leave</h2>
                 </div>
 
                 <form onSubmit={handleLeaveSubmit} className="space-y-4">
+
                     <div className="space-y-2">
                         <Label htmlFor="leaveType" className="font-bold">Leave Type</Label>
                         <select
@@ -149,12 +153,13 @@ export default function LeaveRequest() {
                             <option value="health_general">health general</option>
                             <option value="health_period">Health period Leave</option>
                         </select>
+
                         {formErrors.leaveType && (
                             <p className="text-sm text-red-600">{formErrors.leaveType}</p>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label className="font-bold">Start Date</Label>
                             <Popover>
@@ -178,10 +183,10 @@ export default function LeaveRequest() {
                                         onSelect={setStartDate}
                                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                         initialFocus
-                                        className="pointer-events-auto"
                                     />
                                 </PopoverContent>
                             </Popover>
+
                             {formErrors.startDate && (
                                 <p className="text-sm text-red-600">{formErrors.startDate}</p>
                             )}
@@ -215,10 +220,10 @@ export default function LeaveRequest() {
                                             return false;
                                         }}
                                         initialFocus
-                                        className="pointer-events-auto"
                                     />
                                 </PopoverContent>
                             </Popover>
+
                             {formErrors.endDate && (
                                 <p className="text-sm text-red-600">{formErrors.endDate}</p>
                             )}
@@ -229,7 +234,7 @@ export default function LeaveRequest() {
                         <Label htmlFor="reason" className="font-bold">Reason</Label>
                         <Textarea
                             id="reason"
-                            placeholder="Please provide a detailed reason for your leave (min 10 characters)..."
+                            placeholder="Please provide a detailed reason..."
                             value={leaveReason}
                             onChange={(e) => setLeaveReason(e.target.value)}
                             className={cn(
@@ -259,12 +264,13 @@ export default function LeaveRequest() {
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                             {leaveRequests.map((leave) => (
                                 <div key={leave.id} className="text-sm p-2 border-[2px] border-foreground bg-muted">
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex flex-col md:flex-row md:justify-between">
                                         <span>
-                                            {leave.leave_type.charAt(0).toUpperCase() + leave.leave_type.slice(1).replace(/_/g, " ")}: {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                                            {leave.leave_type.toUpperCase()}: {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
                                         </span>
+
                                         <span className={cn(
-                                            "text-xs font-bold px-2 py-1 border-[2px] border-foreground",
+                                            "text-xs font-bold px-2 py-1 mt-1 md:mt-0 border-[2px] border-foreground",
                                             leave.status === 'pending' && "bg-yellow-200 text-yellow-900",
                                             leave.status === 'approved' && "bg-green-200 text-green-900",
                                             leave.status === 'rejected' && "bg-red-200 text-red-900"
@@ -272,14 +278,18 @@ export default function LeaveRequest() {
                                             {leave.status.toUpperCase()}
                                         </span>
                                     </div>
+
                                     <div className="mt-1 text-xs italic">{leave.reason}</div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
+
             </Card>
         </div>
-    )
+    </div>
+);
+
 
 }
