@@ -16,6 +16,7 @@ import LeaveRequest from "./pages/LeaveRequest";
 import ViewHistory from "./pages/ViewHistory";
 import KitchenDuty from "./pages/KitchenDuty";
 import QRScanner from "./pages/QRScanner";
+import StudentReportPage from "./pages/StudentReportPage";
 
 
 const queryClient = new QueryClient();
@@ -104,6 +105,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/student-report/:studentId"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <StudentReportPage />
+            </ProtectedRoute>
+           }
+          />
 
         <Route
           path="/admin"
