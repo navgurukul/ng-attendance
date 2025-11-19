@@ -17,6 +17,12 @@ import ViewHistory from "./pages/ViewHistory";
 import KitchenDuty from "./pages/KitchenDuty";
 import QRScanner from "./pages/QRScanner";
 import StudentReportPage from "./pages/StudentReportPage";
+import PendingLeaveRequests from "./pages/PendingLeaveRequests";
+import AttendanceCorrections from "./pages/AttendanceCorrections";
+import QRCodeGenerator from "./pages/QRCodeGenerator";
+import StudentRecords from "./pages/StudentRecords";
+import LifecycleTracker from "./pages/LifecycleTracker";
+import ReportsAndDownloads from "./pages/Document";
 
 
 const queryClient = new QueryClient();
@@ -111,14 +117,67 @@ function AppRoutes() {
             <ProtectedRoute requiredRole="admin">
               <StudentReportPage />
             </ProtectedRoute>
-           }
-          />
+          }
+        />
 
         <Route
           path="/admin"
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/leave"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <PendingLeaveRequests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/correction"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AttendanceCorrections />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/view-history"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <StudentRecords />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/tracking"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <LifecycleTracker />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/qr-generator"
+          element={
+            <ProtectedRoute>
+              <QRCodeGenerator />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/document"
+          element={
+            <ProtectedRoute>
+              <ReportsAndDownloads />
             </ProtectedRoute>
           }
         />
