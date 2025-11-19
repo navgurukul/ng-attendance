@@ -1,62 +1,55 @@
-// import React from "react";
-// import { useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import {
+    LayoutDashboard,
+    QrCode,
+    CalendarIcon,
+    Pencil,
+    Target,
+    History,
+    BookAIcon
+} from "lucide-react";
 
-// import {
-//     FaQrcode,
-//     FaUserGraduate,
-//     FaFileAlt,
-//     FaSyncAlt,
-//     FaChartLine,
-//     FaClipboardList,
-//     FaHome,
-// } from "react-icons/fa";
-// import "./AdminDashboardSidebar.css"; // सुनिश्चित करें कि यह CSS फ़ाइल मौजूद है
+const menuItems = [
+    { name: "Dashboard", icon: LayoutDashboard, path: "/Admin" },
+    { name: "QR Generator", icon: QrCode, path: "/admin/qr-generator" },
+    { name: "Leave Requests", icon: CalendarIcon, path: "/admin/leave" },
+    { name: "Correction Requests", icon: Pencil, path: "/admin/correction" },
+    { name: "Life Cycle Tracking", icon: Target, path: "/admin/tracking" },
+    { name: "Students Records", icon: History, path: "/admin/view-history" },
+    { name: "Document", icon: BookAIcon, path: "/admin/document" },
+];
 
-// const AdminDashboardSidebar = () => {
-//     const navigate = useNavigate();
+export default function AdminSidebar() {
+    return (
+        <div className="w-64 h-screen bg-white border-r shadow-sm flex flex-col">
+            {/* Header */}
+            <div className="text-center py-6 border-b">
+                <h1 className="text-2xl font-bold">Admin Panel</h1>
+            </div>
 
-//     return (
-//         <div className="sidebar">
-//             <h3 className="sidebar-title">Admin Panel</h3>
-//             <ul>
-//                 {/* 1. Dashboard (डैशबोर्ड) */}
-//                 <li className="admin-black" onClick={() => navigate("/admin")}> 
-//                     {/* नोट: रूट को अक्सर '/admin-dashboard' के बजाय '/admin' पर सेट किया जाता है */}
-//                     <FaHome /> Dashboard
-//                 </li>
-                
-//                 {/* 2. QR Generator (क्यूआर जेनरेटर) */}
-//                 <li onClick={() => navigate("/admin/qr-generator")}>
-//                     <FaQrcode /> QR Generator
-//                 </li>
-                
-//                 {/* 3. Leave Requests (छुट्टी के अनुरोध) */}
-//                 <li onClick={() => navigate("/admin/leave-requests")}>
-//                     <FaClipboardList /> Leave Requests
-//                 </li>
-                
-//                 {/* 4. Correction Requests (सुधार अनुरोध) */}
-//                 <li onClick={() => navigate("/admin/correction-requests")}>
-//                     <FaSyncAlt /> Correction Requests
-//                 </li>
+            {/* Menu */}
+            <nav className="flex flex-col mt-4">
+                {menuItems.map((item) => {
+                    const Icon = item.icon;
 
-//                 {/* 5. Life Cycle Tracking (लाइफ साइकल ट्रैकिंग) */}
-//                 <li onClick={() => navigate("/admin/lifecycle-tracking")}>
-//                     <FaChartLine /> Life Cycle Tracking
-//                 </li>
-
-//                 {/* 6. Student Records (छात्र रिकॉर्ड) */}
-//                 <li onClick={() => navigate("/admin/student-records")}>
-//                     <FaUserGraduate /> Student Records
-//                 </li>
-                
-//                 {/* 7. Reports & End Flow (रिपोर्ट्स और एंड फ्लो) */}
-//                 <li onClick={() => navigate("/admin/reports-endflow")}>
-//                     <FaFileAlt /> Reports & End Flow
-//                 </li>
-//             </ul>
-//         </div>
-//     );
-// };
-
-// export default AdminDashboardSidebar;
+                    return (
+                        <NavLink
+                            key={item.name}
+                            to={item.path}
+                            className={({ isActive }) =>
+                                 `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all
+                ${isActive
+                                    ? "bg-black text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`
+                            }
+                        >
+                            <Icon size={22} />
+                            {item.name}
+                        </NavLink>
+                    );
+                })}
+            </nav>
+        </div>
+    );
+}
