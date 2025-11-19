@@ -107,9 +107,12 @@ export default function CorrectionRequestForm() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex">
-            <StudentSidebar />
-            <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
+            <div className="w-full md:w-auto">
+                <StudentSidebar />
+            </div>
+            <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center">
+            <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="bg-primary p-2 border-[3px] border-foreground">
                         <FileEdit className="h-6 w-6 text-primary-foreground" />
@@ -210,6 +213,7 @@ export default function CorrectionRequestForm() {
                     </div>
                 </div>
             </Card>
+            </div>
         </div>
     );
 }
