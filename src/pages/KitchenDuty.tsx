@@ -32,24 +32,71 @@ export default function KitchenDuty() {
     setTodayMarked(!!data);
   };
 
+  const checkTodayStatus = async () => {
+    if (!user) return [];
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const { data, error } = await supabase
+      .from("attendance_records")
+      .select("status")
+      .eq("student_id", user.id)
+      .eq("attendance_date", today);
+
+    if (error) return [];
+    return data;
+  };
+
   const handleKitchenDuty = async () => {
     if (!user) return;
 
     setLoading(true);
+    const today = new Date().toISOString().split("T")[0];
+    const statusList = await checkTodayStatus();
 
-    const { error } = await supabase
-      .from("attendance_records")
-      .insert({
-        student_id: user.id,
-        status: "kitchen_duty",
-      });
+    const hasPresent = statusList.some((r) => r.status === "present");
+    const hasLeaveStatus = statusList.some((r) => r.status === "leave");
+    const hasKitchen = statusList.some((r) => r.status === "kitchen_duty");
+
+    if (hasKitchen) {
+      toast.error("Kitchen duty already marked for today");
+      setLoading(false);
+      return;
+    }
+
+    if (hasPresent) {
+      toast.error("Today you are present");
+      setLoading(false);
+      return;
+    }
+
+    const { data: leaveData } = await supabase
+      .from("leave_requests")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("status", "approved")
+      .lte("start_date", today)
+      .gte("end_date", today);
+
+    if (leaveData && leaveData.length > 0) {
+      toast.error("You are on leave today");
+      setLoading(false);
+      return;
+    }
+    if (hasLeaveStatus) {
+      toast.error("You are on leave today");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from("attendance_records").insert({
+      student_id: user.id,
+      status: "kitchen_duty",
+      attendance_date: today,
+    });
 
     if (error) {
-      if (error.code === "23505") {
-        toast.error("Kitchen duty already marked for today");
-      } else {
-        toast.error("Failed to mark kitchen duty");
-      }
+      toast.error("Failed to mark kitchen duty");
     } else {
       toast.success("Kitchen duty marked successfully!");
       setTodayMarked(true);
@@ -91,3 +138,4 @@ export default function KitchenDuty() {
     </div>
   );
 }
+
