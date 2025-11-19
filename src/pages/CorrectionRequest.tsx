@@ -112,107 +112,115 @@ export default function CorrectionRequestForm() {
                 <StudentSidebar />
             </div>
             <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center">
-            <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-primary p-2 border-[3px] border-foreground">
-                        <FileEdit className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                    <h2 className="text-2xl font-bold">Attendance Correction Request</h2>
-                </div>
-
-                <form onSubmit={handleCorrectionSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label className="font-bold">Attendance Date</Label>
-
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start text-left font-normal border-[3px] shadow-brutal-sm h-12",
-                                        !correctionDate && "text-muted-foreground",
-                                        formErrors.attendanceDate && "border-red-500"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {correctionDate ? format(correctionDate, "PPP") : "Pick a date"}
-                                </Button>
-                            </PopoverTrigger>
-
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={correctionDate}
-                                    onSelect={setCorrectionDate}
-                                    className="pointer-events-auto"
-                                />
-                            </PopoverContent>
-                        </Popover>
-
-                        {formErrors.attendanceDate && (
-                            <p className="text-sm text-red-600">{formErrors.attendanceDate}</p>
-                        )}
+                <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="bg-primary p-2 border-[3px] border-foreground">
+                            <FileEdit className="h-6 w-6 text-primary-foreground" />
+                        </div>
+                        <h2 className="text-2xl font-bold">Attendance Correction Request</h2>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="correctionReason" className="font-bold">
-                            Reason
-                        </Label>
-                        <Textarea
-                            id="correctionReason"
-                            placeholder="Explain the issue (min 20 characters)..."
-                            value={correctionReason}
-                            onChange={(e) => setCorrectionReason(e.target.value)}
-                            className={cn(
-                                "border-[3px] border-foreground min-h-[120px] shadow-brutal-sm focus:shadow-brutal resize-none",
-                                formErrors.reason && "border-red-500"
-                            )}
-                        />
-                        {formErrors.reason && (
-                            <p className="text-sm text-red-600">{formErrors.reason}</p>
-                        )}
-                    </div>
+                    <form onSubmit={handleCorrectionSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="font-bold">Attendance Date</Label>
 
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={loading}
-                    >
-                        Submit Correction Request
-                    </Button>
-                </form>
-
-                <div className="mt-6">
-                    <h3 className="text-xl font-bold mb-3">Your Requests</h3>
-                    <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
-                        {correctionRequests.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No correction requests submitted yet.</p>
-                        ) : (
-                            correctionRequests.map((req) => (
-                                <Card key={req.id} className="p-4 border-[2px] border-foreground bg-muted">
-                                    <div className="font-bold">
-                                        Date: {format(new Date(req.attendance_date), "PPP")}
-                                    </div>
-                                    <div className="text-sm mt-1">Reason: {req.reason}</div>
-                                    <div
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
                                         className={cn(
-                                            "mt-2 text-sm font-bold",
-                                            req.status === "approved" && "text-green-600",
-                                            req.status === "rejected" && "text-red-600",
-                                            req.status === "pending" && "text-yellow-600"
+                                            "w-full justify-start text-left font-normal border-[3px] shadow-brutal-sm h-12",
+                                            !correctionDate && "text-muted-foreground",
+                                            formErrors.attendanceDate && "border-red-500"
                                         )}
                                     >
-                                        Status: {req.status.toUpperCase()}
-                                    </div>
-                                    {req.admin_notes && (
-                                        <p className="text-xs mt-2 opacity-80">Admin Notes: {req.admin_notes}</p>
-                                    )}
-                                </Card>
-                            ))
-                        )}
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {correctionDate ? format(correctionDate, "PPP") : "Pick a date"}
+                                    </Button>
+                                </PopoverTrigger>
+
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={correctionDate}
+                                        onSelect={setCorrectionDate}
+                                        disabled={(date) => {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            date.setHours(0, 0, 0, 0);
+
+                                            return date.getTime() !== today.getTime();
+                                        }}
+                                        className="pointer-events-auto"
+                                    />
+
+                                </PopoverContent>
+                            </Popover>
+
+                            {formErrors.attendanceDate && (
+                                <p className="text-sm text-red-600">{formErrors.attendanceDate}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="correctionReason" className="font-bold">
+                                Reason
+                            </Label>
+                            <Textarea
+                                id="correctionReason"
+                                placeholder="Explain the issue (min 20 characters)..."
+                                value={correctionReason}
+                                onChange={(e) => setCorrectionReason(e.target.value)}
+                                className={cn(
+                                    "border-[3px] border-foreground min-h-[120px] shadow-brutal-sm focus:shadow-brutal resize-none",
+                                    formErrors.reason && "border-red-500"
+                                )}
+                            />
+                            {formErrors.reason && (
+                                <p className="text-sm text-red-600">{formErrors.reason}</p>
+                            )}
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={loading}
+                        >
+                            Submit Correction Request
+                        </Button>
+                    </form>
+
+                    <div className="mt-6">
+                        <h3 className="text-xl font-bold mb-3">Your Requests</h3>
+                        <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                            {correctionRequests.length === 0 ? (
+                                <p className="text-muted-foreground text-sm">No correction requests submitted yet.</p>
+                            ) : (
+                                correctionRequests.map((req) => (
+                                    <Card key={req.id} className="p-4 border-[2px] border-foreground bg-muted relative">
+                                        <div className="font-bold">
+                                            Date: {format(new Date(req.attendance_date), "PPP")}
+                                        </div>
+                                        <div className="text-sm mt-1">Reason: {req.reason}</div>
+                                        <div
+                                            className={cn(
+                                                "mt-2 text-sm font-bold",
+                                                req.status === "approved" && "text-green-600",
+                                                req.status === "rejected" && "text-red-600",
+                                                req.status === "pending" && "text-yellow-600"
+                                            )}
+                                        >
+                                            Status: {req.status.toUpperCase()}
+                                        </div>
+                                        {req.admin_notes && (
+                                            <p className="text-xs mt-2 opacity-80">Admin Notes: {req.admin_notes}</p>
+                                        )}
+                                    </Card>
+                                ))
+                            )}
+                        </div>
                     </div>
-                </div>
-            </Card>
+                </Card>
             </div>
         </div>
     );
