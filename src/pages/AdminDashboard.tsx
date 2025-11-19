@@ -6,6 +6,7 @@ import AdminSidebar from "./AdminDashboardSidebar";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -36,10 +37,16 @@ export default function AdminDashboard() {
   const [absentStudents, setAbsentStudents] = useState<{ full_name: string, email: string }[]>([]);
   const [absentListLoading, setAbsentListLoading] = useState(false);
 
-
   const [isKitchenListOpen, setIsKitchenListOpen] = useState(false);
   const [kitchenDutyStudents, setKitchenDutyStudents] = useState<{ full_name: string, email: string }[]>([]);
   const [kitchenListLoading, setKitchenListLoading] = useState(false);
+
+  const [isLeaveMenuOpen, setIsLeaveMenuOpen] = useState(false); // First Dialog: Leave Menu
+  const [isSpecificLeaveListOpen, setIsSpecificLeaveListOpen] = useState(false); // Second Dialog: Student List
+  const [specificLeaveStudents, setSpecificLeaveStudents] = useState<{ full_name: string, email: string }[]>([]);
+  const [specificLeaveType, setSpecificLeaveType] = useState("");
+  const [specificListLoading, setSpecificListLoading] = useState(false);
+  
 
 
   const fetchDashboardData = useCallback(async () => {
@@ -88,7 +95,7 @@ export default function AdminDashboard() {
 
     setStats({
       present,
-      absent, 
+      absent,
       kitchen,
       emergencyLeave,
       jobInterviewsLeave,
@@ -98,7 +105,7 @@ export default function AdminDashboard() {
       specialOccasionsLeave,
       healthGeneralLeave,
       healthPeriodLeave,
-      totalStudentsCount: finalTotalCount, 
+      totalStudentsCount: finalTotalCount,
     });
   }, []);
 
@@ -150,7 +157,6 @@ export default function AdminDashboard() {
     setIsPresentListOpen(true);
   };
 
-  
   const fetchTotalStudents = async () => {
     if (stats.totalStudentsCount === 0) {
       setTotalStudents([]);
@@ -160,7 +166,7 @@ export default function AdminDashboard() {
 
     setTotalListLoading(true);
 
-    
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('full_name, email')
@@ -174,10 +180,9 @@ export default function AdminDashboard() {
 
     setTotalStudents(profiles || []);
     setTotalListLoading(false);
-    setIsTotalListOpen(true); 
+    setIsTotalListOpen(true);
   };
 
- 
   const fetchAbsentStudents = async () => {
     if (stats.absent === 0) {
       setAbsentStudents([]);
@@ -211,7 +216,7 @@ export default function AdminDashboard() {
       .lte('start_date', today)
       .gte('end_date', today);
 
-    
+
     const accountedForIdsSet = new Set();
     presentOrKitchenRecords?.forEach(r => accountedForIdsSet.add(r.student_id));
     approvedLeaveRecords?.forEach(r => accountedForIdsSet.add(r.student_id));
@@ -222,11 +227,10 @@ export default function AdminDashboard() {
 
     setAbsentStudents(absentProfiles);
     setAbsentListLoading(false);
-    setIsAbsentListOpen(true); 
+    setIsAbsentListOpen(true);
   };
 
 
-  
   const fetchKitchenDutyStudents = async () => {
     if (stats.kitchen === 0) {
       setKitchenDutyStudents([]);
@@ -237,7 +241,7 @@ export default function AdminDashboard() {
     setKitchenListLoading(true);
     const today = new Date().toISOString().split('T')[0];
 
-    
+
     const { data: kitchenRecords, error: recordsError } = await supabase
       .from('attendance_records')
       .select('student_id')
@@ -252,7 +256,7 @@ export default function AdminDashboard() {
 
     const kitchenIds = kitchenRecords?.map(r => r.student_id) || [];
 
-   
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('full_name, email')
@@ -265,9 +269,76 @@ export default function AdminDashboard() {
 
     setKitchenDutyStudents(profiles || []);
     setKitchenListLoading(false);
-    setIsKitchenListOpen(true); 
+    setIsKitchenListOpen(true);
   };
  
+  const fetchSpecificLeaveStudents = async (leave_type: string, display_name: string) => {
+
+    setIsLeaveMenuOpen(false);
+    setSpecificLeaveType(display_name);
+    setIsSpecificLeaveListOpen(true);
+    setSpecificListLoading(true);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: leaveRecords, error: recordsError } = await supabase
+      .from('leave_requests')
+      .select('student_id')
+      .eq('status', 'approved')
+      .eq('leave_type', leave_type)
+      .lte('start_date', today)
+      .gte('end_date', today);
+
+    if (recordsError) {
+      console.error(`Error fetching ${display_name} records:`, recordsError);
+      setSpecificListLoading(false);
+      return;
+    }
+
+    const studentIds = leaveRecords?.map(r => r.student_id) || [];
+
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .in('id', studentIds)
+      .order('full_name');
+
+    if (profilesError) {
+      console.error(`Error fetching profiles for ${display_name}:`, profilesError);
+    }
+
+    setSpecificLeaveStudents(profiles || []);
+    setSpecificListLoading(false);
+  };
+
+  const fetchLeaveTypeMenu = () => {
+    setIsLeaveMenuOpen(true);
+  };
+
+  const getLeaveCount = (leaveType: string): number => {
+    switch (leaveType) {
+      case 'emergency': return stats.emergencyLeave;
+      case 'job_interview': return stats.jobInterviewsLeave;
+      case 'documentation': return stats.documentationLeave;
+      case 'college': return stats.collegeLeave;
+      case 'exam': return stats.examLeave;
+      case 'special_occasions': return stats.specialOccasionsLeave;
+      case 'health_general': return stats.healthGeneralLeave;
+      case 'health_period': return stats.healthPeriodLeave;
+      default: return 0;
+    }
+  };
+
+  const LEAVE_TYPES_MENU = [
+    { db_name: 'emergency', display_name: 'Emergency Leave' },
+    { db_name: 'job_interview', display_name: 'Job Interviews Leave' },
+    { db_name: 'documentation', display_name: 'Documentation Leave' },
+    { db_name: 'college', display_name: 'College Leave' },
+    { db_name: 'exam', display_name: 'Exam Leave' },
+    { db_name: 'special_occasions', display_name: 'Special Occasions Leave' },
+    { db_name: 'health_general', display_name: 'Health General Leave' },
+    { db_name: 'health_period', display_name: 'Health Period Leave' },
+  ];
 
 
   return (
@@ -281,7 +352,6 @@ export default function AdminDashboard() {
 
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
 
-          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchTotalStudents}
@@ -290,7 +360,6 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Total Students</div>
           </Card>
 
-         
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchPresentStudents}
@@ -299,7 +368,6 @@ export default function AdminDashboard() {
             <div className="text-sm">Present Today</div>
           </Card>
 
-          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchAbsentStudents}
@@ -308,7 +376,6 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Absent</div>
           </Card>
 
-         
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchKitchenDutyStudents}
@@ -317,56 +384,19 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Kitchen Duty</div>
           </Card>
 
-         
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.emergencyLeave}</div>
-            <div className="text-sm text-muted-foreground">Emergency Leave</div>
+          <Card
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            onClick={fetchLeaveTypeMenu}
+          >
+
+            <div className="text-2xl font-bold mb-1">
+              {stats.emergencyLeave + stats.jobInterviewsLeave + stats.documentationLeave + stats.collegeLeave + stats.examLeave + stats.specialOccasionsLeave + stats.healthGeneralLeave + stats.healthPeriodLeave}
+            </div>
+            <div className="text-sm text-muted-foreground">Leave Types</div>
           </Card>
 
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.jobInterviewsLeave}</div>
-            <div className="text-sm text-muted-foreground">Job Interviews Leave</div>
-          </Card>
-
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.documentationLeave}</div>
-            <div className="text-sm text-muted-foreground">Documentation</div>
-          </Card>
-
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.collegeLeave}</div>
-            <div className="text-sm text-muted-foreground">College</div>
-          </Card>
-
-         
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.examLeave}</div>
-            <div className="text-sm text-muted-foreground">Exam</div>
-          </Card>
-
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.specialOccasionsLeave}</div>
-            <div className="text-sm text-muted-foreground">Special Occasions</div>
-          </Card>
-
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.healthGeneralLeave}</div>
-            <div className="text-sm text-muted-foreground">Health General</div>
-          </Card>
-
-          
-          <Card className="p-4 border-[3px] border-foreground shadow-brutal bg-card">
-            <div className="text-2xl font-bold mb-1">{stats.healthPeriodLeave}</div>
-            <div className="text-sm text-muted-foreground">Health Period Leave</div>
-          </Card>
 
         </div>
-
 
         <Dialog open={isPresentListOpen} onOpenChange={setIsPresentListOpen}>
           <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
@@ -423,7 +453,6 @@ export default function AdminDashboard() {
         </Dialog>
 
 
-       
         <Dialog open={isTotalListOpen} onOpenChange={setIsTotalListOpen}>
           <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
             <DialogHeader>
@@ -451,7 +480,6 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
 
-       
         <Dialog open={isKitchenListOpen} onOpenChange={setIsKitchenListOpen}>
           <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
             <DialogHeader>
@@ -478,7 +506,64 @@ export default function AdminDashboard() {
             )}
           </DialogContent>
         </Dialog>
-        
+
+
+        <Dialog open={isLeaveMenuOpen} onOpenChange={setIsLeaveMenuOpen}>
+          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Select Leave Type</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ul className="space-y-2">
+                {LEAVE_TYPES_MENU.map((leave) => (
+                  <li key={leave.db_name}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between border-[2px] border-foreground h-12 shadow-brutal-sm hover:bg-primary/10"
+                     
+                      onClick={() => fetchSpecificLeaveStudents(leave.db_name, leave.display_name)}
+                    >
+                      <span className="font-medium">{leave.display_name}</span>
+                      
+                      <span className={`font-bold p-1 rounded text-sm ${getLeaveCount(leave.db_name) > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {getLeaveCount(leave.db_name)} Today
+                      </span>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+
+        <Dialog open={isSpecificLeaveListOpen} onOpenChange={setIsSpecificLeaveListOpen}>
+          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">{specificLeaveType} ({specificLeaveStudents.length})</DialogTitle>
+            </DialogHeader>
+            {specificListLoading ? (
+              <p className="py-4 text-center text-muted-foreground">Loading student list...</p>
+            ) : specificLeaveStudents.length > 0 ? (
+              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+                <ul className="space-y-4">
+                  {specificLeaveStudents.map((student, index) => (
+                    <li
+                      key={index}
+                      className="pb-2 mb-2 border-b border-muted-foreground/30 last:border-b-0 text-foreground"
+                    >
+                      <div className="font-semibold">{student.full_name}</div>
+                      <div className="text-sm text-muted-foreground">{student.email}</div>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            ) : (
+              <p className="py-4 text-center text-muted-foreground">No students on {specificLeaveType.toLowerCase()} today.</p>
+            )}
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
