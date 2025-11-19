@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import AdminSidebar from "./AdminDashboardSidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Trophy, TrendingDown } from "lucide-react";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -41,54 +43,60 @@ export default function AdminDashboard() {
   const [kitchenDutyStudents, setKitchenDutyStudents] = useState<{ full_name: string, email: string }[]>([]);
   const [kitchenListLoading, setKitchenListLoading] = useState(false);
 
-  const [isLeaveMenuOpen, setIsLeaveMenuOpen] = useState(false); // First Dialog: Leave Menu
-  const [isSpecificLeaveListOpen, setIsSpecificLeaveListOpen] = useState(false); // Second Dialog: Student List
+  const [isLeaveMenuOpen, setIsLeaveMenuOpen] = useState(false);
+  const [isSpecificLeaveListOpen, setIsSpecificLeaveListOpen] = useState(false);
   const [specificLeaveStudents, setSpecificLeaveStudents] = useState<{ full_name: string, email: string }[]>([]);
   const [specificLeaveType, setSpecificLeaveType] = useState("");
   const [specificListLoading, setSpecificListLoading] = useState(false);
-  
+
+  const [topStudent, setTopStudent] = useState<{ name: string, email: string, percentage: number } | null>(null);
+  const [bottomStudent, setBottomStudent] = useState<{ name: string, email: string, percentage: number } | null>(null);
 
 
   const fetchDashboardData = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
 
-    const { count: totalStudentsCount, error: countError } = await supabase
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const todayISO = today.toISOString().split('T')[0];
+
+   
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('*', { count: 'exact', head: true });
+      .select('id, full_name, email, created_at'); 
 
-    if (countError) {
-      console.error('Error fetching total student count:', countError);
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
     }
-    const finalTotalCount = totalStudentsCount || 0;
+    const finalTotalCount = profiles?.length || 0;
 
 
-    const { data: attendanceData } = await supabase
+    const { data: attendanceDataToday } = await supabase
       .from('attendance_records')
       .select('status')
-      .eq('attendance_date', today);
+      .eq('attendance_date', todayISO);
 
-    const present = attendanceData?.filter(r => r.status === 'present').length || 0;
-    const kitchen = attendanceData?.filter(r => r.status === 'kitchen_duty').length || 0;
+    const present = attendanceDataToday?.filter(r => r.status === 'present').length || 0;
+    const kitchen = attendanceDataToday?.filter(r => r.status === 'kitchen_duty').length || 0;
 
 
-    const { data: leaveData, error: leaveError } = await supabase
+    const { data: leaveDataToday, error: leaveError } = await supabase
       .from('leave_requests')
       .select('leave_type')
       .eq('status', 'approved')
-      .lte('start_date', today)
-      .gte('end_date', today);
+      .lte('start_date', todayISO)
+      .gte('end_date', todayISO);
 
     if (leaveError) {
       console.error('Error fetching approved leaves for today:', leaveError);
     }
-    const emergencyLeave = leaveData?.filter(l => l.leave_type === 'emergency').length || 0;
-    const jobInterviewsLeave = leaveData?.filter(l => l.leave_type === 'job_interview').length || 0;
-    const documentationLeave = leaveData?.filter(l => l.leave_type === 'documentation').length || 0;
-    const collegeLeave = leaveData?.filter(l => l.leave_type === 'college').length || 0;
-    const examLeave = leaveData?.filter(l => l.leave_type === 'exam').length || 0;
-    const specialOccasionsLeave = leaveData?.filter(l => l.leave_type.trim() === 'special_occasions').length || 0;
-    const healthGeneralLeave = leaveData?.filter(l => l.leave_type === 'health_general').length || 0;
-    const healthPeriodLeave = leaveData?.filter(l => l.leave_type === 'health_period').length || 0;
+    const emergencyLeave = leaveDataToday?.filter(l => l.leave_type === 'emergency').length || 0;
+    const jobInterviewsLeave = leaveDataToday?.filter(l => l.leave_type === 'job_interview').length || 0;
+    const documentationLeave = leaveDataToday?.filter(l => l.leave_type === 'documentation').length || 0;
+    const collegeLeave = leaveDataToday?.filter(l => l.leave_type === 'college').length || 0;
+    const examLeave = leaveDataToday?.filter(l => l.leave_type === 'exam').length || 0;
+    const specialOccasionsLeave = leaveDataToday?.filter(l => l.leave_type.trim() === 'special_occasions').length || 0;
+    const healthGeneralLeave = leaveDataToday?.filter(l => l.leave_type === 'health_general').length || 0;
+    const healthPeriodLeave = leaveDataToday?.filter(l => l.leave_type === 'health_period').length || 0;
 
     const totalAccounted = present + kitchen + emergencyLeave + jobInterviewsLeave + documentationLeave + collegeLeave + examLeave + specialOccasionsLeave + healthGeneralLeave + healthPeriodLeave;
     const absent = Math.max(0, finalTotalCount - totalAccounted);
@@ -107,7 +115,79 @@ export default function AdminDashboard() {
       healthPeriodLeave,
       totalStudentsCount: finalTotalCount,
     });
-  }, []);
+
+    const { data: allAttendance, error: allAttendanceError } = await supabase
+      .from('attendance_records')
+      .select('student_id, status, attendance_date')
+      .gte('attendance_date', startOfMonth)
+      .lte('attendance_date', todayISO);
+
+    if (profiles && allAttendance && profiles.length > 0) {
+      let maxAttendance = -1;
+      let minAttendance = 101;
+      let topStudentData = null;
+      let bottomStudentData = null;
+
+      profiles.forEach(profile => {
+        const studentAttendance = allAttendance.filter(a => a.student_id === profile.id);
+        const presentDays = studentAttendance.filter(a => a.status === 'present').length;
+
+        const accountCreatedAt = new Date(profile.created_at);
+        const startCheckDate = accountCreatedAt > new Date(startOfMonth) ? accountCreatedAt : new Date(startOfMonth);
+
+        let totalAccountableDays = 0;
+        let checkDate = new Date(startCheckDate.getFullYear(), startCheckDate.getMonth(), startCheckDate.getDate());
+        const endCheckDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        while (checkDate <= endCheckDate) {
+          totalAccountableDays++;
+          checkDate.setDate(checkDate.getDate() + 1);
+        }
+
+        if (totalAccountableDays > 0) {
+          const percentage = (presentDays / totalAccountableDays) * 100;
+
+          if (percentage >= maxAttendance) {
+            maxAttendance = percentage;
+            topStudentData = {
+              name: profile.full_name,
+              email: profile.email,
+              percentage: Math.round(percentage)
+            };
+          }
+
+          if (percentage <= minAttendance) {
+            minAttendance = percentage;
+            bottomStudentData = {
+              name: profile.full_name,
+              email: profile.email,
+              percentage: Math.round(percentage)
+            };
+          }
+        }
+      });
+
+      if (topStudentData && bottomStudentData && topStudentData.name === bottomStudentData.name && finalTotalCount > 1) {
+       
+        if (topStudentData.percentage === 100) {
+          
+          
+          setBottomStudent(null);
+        } else {
+          
+          
+        }
+      }
+
+      setTopStudent(topStudentData);
+      setBottomStudent(bottomStudentData);
+
+    } else {
+      setTopStudent(null);
+      setBottomStudent(null);
+    }
+  }, [user]);
+
 
   useEffect(() => {
     if (user) {
@@ -116,7 +196,7 @@ export default function AdminDashboard() {
   }, [user, fetchDashboardData]);
 
 
-  const fetchPresentStudents = async () => {
+  const fetchPresentStudents = async () => { 
     if (stats.present === 0) {
       setPresentStudents([]);
       setIsPresentListOpen(true);
@@ -157,7 +237,7 @@ export default function AdminDashboard() {
     setIsPresentListOpen(true);
   };
 
-  const fetchTotalStudents = async () => {
+  const fetchTotalStudents = async () => { 
     if (stats.totalStudentsCount === 0) {
       setTotalStudents([]);
       setIsTotalListOpen(true);
@@ -183,7 +263,7 @@ export default function AdminDashboard() {
     setIsTotalListOpen(true);
   };
 
-  const fetchAbsentStudents = async () => {
+  const fetchAbsentStudents = async () => { 
     if (stats.absent === 0) {
       setAbsentStudents([]);
       setIsAbsentListOpen(true);
@@ -231,7 +311,7 @@ export default function AdminDashboard() {
   };
 
 
-  const fetchKitchenDutyStudents = async () => {
+  const fetchKitchenDutyStudents = async () => { 
     if (stats.kitchen === 0) {
       setKitchenDutyStudents([]);
       setIsKitchenListOpen(true);
@@ -271,9 +351,11 @@ export default function AdminDashboard() {
     setKitchenListLoading(false);
     setIsKitchenListOpen(true);
   };
+  
+
  
   const fetchSpecificLeaveStudents = async (leave_type: string, display_name: string) => {
-
+   
     setIsLeaveMenuOpen(false);
     setSpecificLeaveType(display_name);
     setIsSpecificLeaveListOpen(true);
@@ -281,6 +363,7 @@ export default function AdminDashboard() {
 
     const today = new Date().toISOString().split('T')[0];
 
+    
     const { data: leaveRecords, error: recordsError } = await supabase
       .from('leave_requests')
       .select('student_id')
@@ -297,6 +380,7 @@ export default function AdminDashboard() {
 
     const studentIds = leaveRecords?.map(r => r.student_id) || [];
 
+    
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('full_name, email')
@@ -311,10 +395,12 @@ export default function AdminDashboard() {
     setSpecificListLoading(false);
   };
 
+  
   const fetchLeaveTypeMenu = () => {
     setIsLeaveMenuOpen(true);
   };
 
+  
   const getLeaveCount = (leaveType: string): number => {
     switch (leaveType) {
       case 'emergency': return stats.emergencyLeave;
@@ -329,6 +415,7 @@ export default function AdminDashboard() {
     }
   };
 
+ 
   const LEAVE_TYPES_MENU = [
     { db_name: 'emergency', display_name: 'Emergency Leave' },
     { db_name: 'job_interview', display_name: 'Job Interviews Leave' },
@@ -350,8 +437,10 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Manage attendance, leaves, and student records.</p>
         </div>
 
+       
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
 
+          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchTotalStudents}
@@ -360,6 +449,7 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Total Students</div>
           </Card>
 
+          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchPresentStudents}
@@ -368,6 +458,7 @@ export default function AdminDashboard() {
             <div className="text-sm">Present Today</div>
           </Card>
 
+          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchAbsentStudents}
@@ -376,6 +467,7 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Absent</div>
           </Card>
 
+       
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchKitchenDutyStudents}
@@ -384,20 +476,59 @@ export default function AdminDashboard() {
             <div className="text-sm text-muted-foreground">Kitchen Duty</div>
           </Card>
 
+          
           <Card
             className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchLeaveTypeMenu}
           >
-
             <div className="text-2xl font-bold mb-1">
               {stats.emergencyLeave + stats.jobInterviewsLeave + stats.documentationLeave + stats.collegeLeave + stats.examLeave + stats.specialOccasionsLeave + stats.healthGeneralLeave + stats.healthPeriodLeave}
             </div>
             <div className="text-sm text-muted-foreground">Leave Types</div>
           </Card>
 
-
         </div>
 
+       
+        {topStudent && (
+          <Card className="p-6 mt-8 border-[3px] border-foreground shadow-brutal bg-yellow-50">
+            <div className="flex items-center gap-4 mb-2">
+              <Trophy className="h-8 w-8 text-yellow-600 fill-yellow-400" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Campus Top Presenter: {topStudent.name}</h2>
+                <p className="text-sm text-gray-600">Email: {topStudent.email}</p>
+                <p className="text-lg text-gray-700 font-semibold">
+                  Attendance (This Month): <span className="text-green-600">{topStudent.percentage}%</span>
+                </p>
+              </div>
+            </div>
+            <blockquote className="border-l-4 border-yellow-500 pl-4 text-gray-600 italic text-sm">
+              "🌟 Outstanding dedication! Congratulations {topStudent.name} for achieving the highest attendance this month. Your commitment is truly inspiring! 🌟"
+            </blockquote>
+          </Card>
+        )}
+
+      
+        {bottomStudent && (
+          <Card className="p-6 mt-6 border-[3px] border-foreground shadow-brutal bg-red-50">
+            <div className="flex items-center gap-4 mb-2">
+              <TrendingDown className="h-8 w-8 text-red-600" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Lowest Presenter: {bottomStudent.name}</h2>
+                <p className="text-sm text-gray-600">Email: {bottomStudent.email}</p>
+                <p className="text-lg text-gray-700 font-semibold">
+                  Attendance (This Month): <span className="text-red-600">{bottomStudent.percentage}%</span>
+                </p>
+              </div>
+            </div>
+            <blockquote className="border-l-4 border-red-500 pl-4 text-gray-600 italic text-sm">
+              "⚠️ Attendance alert! {bottomStudent.name}, your monthly attendance is the lowest. Please prioritize your presence to avoid further warnings. ⚠️"
+            </blockquote>
+          </Card>
+        )}
+
+
+       
         <Dialog open={isPresentListOpen} onOpenChange={setIsPresentListOpen}>
           <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
             <DialogHeader>
@@ -507,7 +638,6 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
 
-
         <Dialog open={isLeaveMenuOpen} onOpenChange={setIsLeaveMenuOpen}>
           <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
             <DialogHeader>
@@ -520,11 +650,11 @@ export default function AdminDashboard() {
                     <Button
                       variant="outline"
                       className="w-full justify-between border-[2px] border-foreground h-12 shadow-brutal-sm hover:bg-primary/10"
-                     
+
                       onClick={() => fetchSpecificLeaveStudents(leave.db_name, leave.display_name)}
                     >
                       <span className="font-medium">{leave.display_name}</span>
-                      
+
                       <span className={`font-bold p-1 rounded text-sm ${getLeaveCount(leave.db_name) > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                         {getLeaveCount(leave.db_name)} Today
                       </span>
