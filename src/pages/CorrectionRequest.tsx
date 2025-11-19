@@ -111,7 +111,7 @@ export default function CorrectionRequestForm() {
             <div className="w-full md:w-auto">
                 <StudentSidebar />
             </div>
-            <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center">
+            <div className="flex-1 px-4 py-6 md:px-8 md:py-10">
                 <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="bg-primary p-2 border-[3px] border-foreground">
