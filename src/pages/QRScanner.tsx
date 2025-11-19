@@ -113,7 +113,7 @@ export default function QRScanner() {
 
       <div className="flex-1 px-4 py-6 md:px-8 md:py-10">
 
-        <h1 className="text-3xl font-bold mb-4 text-center">Scan Attendance</h1>
+        <h1 className="text-4xl font-bold mb-4 text-center">Scan Attendance</h1>
         <p className="text-muted-foreground mb-6 text-center">Scan the QR code to mark attendance.</p>
 
 
