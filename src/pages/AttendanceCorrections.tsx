@@ -114,9 +114,9 @@ export default function AttendanceCorrections() {
       <AdminSidebar />
 
       <div className="flex-1 p-8">
-        <div className="mb-8">
+        <div className="mb-8 text-center flex flex-col items-center">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <FileEdit className="h-8 w-8 text-primary" />
+            <span><FileEdit className="h-8 w-8 text-primary" /></span>
             Attendance Corrections
           </h1>
           <p className="text-muted-foreground">Manage pending attendance correction requests.</p>
