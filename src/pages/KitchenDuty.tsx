@@ -106,7 +106,7 @@ export default function KitchenDuty() {
   };
 
   return (
-    <div className="flex w-full min-h-screen bg-background">
+    <div className="flex w-full min-h-screen bg-background pt-20">
       <StudentSidebar />
 
       <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center">
