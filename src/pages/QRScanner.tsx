@@ -33,12 +33,72 @@ export default function QRScanner() {
     setTodayMarked(!!data);
   };
 
-  const startQRScanner = () => {
+
+  const checkScanEligibility = async (today: string) => {
+    if (!user) return false;
+
+
+    const { data: present } = await supabase
+      .from("attendance_records")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("attendance_date", today)
+      .eq("status", "present")
+      .maybeSingle();
+
+    if (present) {
+      toast.error("You are already marked PRESENT today.");
+      return false;
+    }
+
+
+    const { data: leave } = await supabase
+      .from("leave_requests")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("status", "approved")
+      .lte("start_date", today)
+      .gte("end_date", today)
+      .maybeSingle();
+
+    if (leave) {
+      toast.error("You are on approved LEAVE today.");
+      return false;
+    }
+
+
+    const { data: kitchen } = await supabase
+      .from("attendance_records")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("attendance_date", today)
+      .eq("status", "kitchen_duty")
+      .maybeSingle();
+
+    if (kitchen) {
+      toast.error("Today you have KITCHEN TURN duty.");
+      return false;
+    }
+
+    return true;
+  };
+
+
+
+  const startQRScanner = async () => {
+    if (!user) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const allow = await checkScanEligibility(today);
+
+    if (!allow) return;
+
+
     setScanning(true);
 
     setTimeout(() => {
       const screenWidth = window.innerWidth;
-
       const qrboxSize =
         screenWidth < 480 ? screenWidth - 50 : screenWidth < 768 ? 280 : 300;
 
