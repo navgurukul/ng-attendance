@@ -62,7 +62,6 @@ export default function CorrectionRequestForm() {
 
         setCorrectionRequests((data as any) || []);
     };
-
     const handleCorrectionSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
@@ -86,6 +85,62 @@ export default function CorrectionRequestForm() {
 
         setLoading(true);
 
+        const selectedDate = format(correctionDate!, "yyyy-MM-dd");
+
+        const { data: present } = await supabase
+            .from("attendance_records")
+            .select("*")
+            .eq("student_id", user.id)
+            .eq("attendance_date", selectedDate)
+            .eq("status", "present")
+            .maybeSingle();
+
+        if (present) {
+            toast.error("You were already PRESENT on this date.");
+            setLoading(false);
+            return;
+        }
+
+        const { data: leaveData } = await supabase
+            .from("leave_requests")
+            .select("*")
+            .eq("student_id", user.id)
+            .lte("start_date", selectedDate)
+            .gte("end_date", selectedDate);
+
+        if (leaveData && leaveData.length > 0) {
+            toast.error("You were on LEAVE during this date.");
+            setLoading(false);
+            return;
+        }
+        const { data: kitchenTurn } = await supabase
+            .from("attendance_records")
+            .select("*")
+            .eq("student_id", user.id)
+            .eq("attendance_date", selectedDate)
+            .eq("status", "kitchen_duty")
+            .maybeSingle();
+
+        if (kitchenTurn) {
+            toast.error("You had KITCHEN DUTY on this date.");
+            setLoading(false);
+            return;
+        }
+
+        const { data: existingRequest } = await supabase
+            .from('attendance_correction_requests' as any)
+            .select("*")
+            .eq("student_id", user.id)
+            .eq("attendance_date", selectedDate)
+            .maybeSingle();
+
+        if (existingRequest) {
+            toast.error("Correction request already submitted for this date.");
+            setLoading(false);
+            return;
+        }
+
+
         const { error } = await supabase
             .from('attendance_correction_requests' as any)
             .insert({
@@ -105,6 +160,7 @@ export default function CorrectionRequestForm() {
 
         setLoading(false);
     };
+
 
     return (
         <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
