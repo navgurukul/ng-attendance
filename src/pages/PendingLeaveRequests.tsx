@@ -108,14 +108,14 @@ export default function PendingLeaveRequests() {
 
       <AdminSidebar />
 
-      <div className="flex-1 p-4 md:p-8 flex flex-col">
+      <div className="flex-1 md:p-8 flex flex-col pt-10">
         <h1 className="text-4xl font-bold mb-4 flex gap-3">
           <CalendarCheck className="h-8 w-8 text-primary" />
           Pending Leave Requests
         </h1>
         <p className="text-muted-foreground mb-6 ml-10">Review and process all student leave applications.</p>
 
-        <div className="w-full max-w-4xl grid lg:grid-cols-1 gap-6">
+        <div className="w-full max-w-4xl grid lg:grid-cols-1 gap-6 mr-50">
 
           <Card className="p-6 border-[2px] border-foreground shadow-brutal bg-card">
             <div className="flex items-center gap-3 mb-6">
