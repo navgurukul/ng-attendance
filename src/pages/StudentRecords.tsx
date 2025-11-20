@@ -184,7 +184,7 @@ export default function StudentRecords() {
 
   
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex pt-[100px]">
       <div className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
