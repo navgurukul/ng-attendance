@@ -19,7 +19,7 @@ export default function ReportsAndDownloads() {
      
       <AdminSidebar />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 pt-[100px]">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <Download className="h-8 w-8 text-primary" />
