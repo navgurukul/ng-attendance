@@ -163,7 +163,7 @@ export default function CorrectionRequestForm() {
 
 
     return (
-        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
             <div className="w-full md:w-auto">
                 <StudentSidebar />
             </div>

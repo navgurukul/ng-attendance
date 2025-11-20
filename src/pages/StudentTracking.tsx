@@ -112,7 +112,7 @@ export default function StudentTrackingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
         <StudentSidebar />
      <div className="flex-1 px-4 py-6 md:px-8 md:py-10">   
       <Card className="p-10 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto mt-[10px]">

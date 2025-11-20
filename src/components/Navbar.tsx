@@ -16,7 +16,8 @@ export const Navbar = ({ isAuthenticated, userRole, onLogout }: NavbarProps) => 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="border-b-[4px] border-foreground bg-background">
+    <nav className="border-b-[4px] border-foreground bg-background fixed top-0 left-0 w-full z-50">
+
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           {/* LEFT SIDE LOGO */}
