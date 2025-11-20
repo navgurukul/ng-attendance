@@ -192,7 +192,7 @@ export default function ViewHistory() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px]">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
             <StudentSidebar />
 
             <div className="container mx-auto p-6">

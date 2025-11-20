@@ -167,7 +167,7 @@ export default function QRScanner() {
 
   return (
 
-    <div className="flex w-full min-h-screen bg-background">
+    <div className="flex w-full min-h-screen bg-background pt-20">
 
       <StudentSidebar />
 

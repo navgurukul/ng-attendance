@@ -67,7 +67,7 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex pt-20">
       <StudentSidebar />
 
       <div className="container mx-auto px-4 py-8  text-center flex flex-col items-center">

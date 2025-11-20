@@ -5,7 +5,7 @@ import { QrCode, Users, Calendar, FileText, CheckCircle2, Clock } from "lucide-r
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       <section className="container mx-auto px-10 py-2">
         <div className="grid md:grid-cols-2 gap-5 items-center">
 
