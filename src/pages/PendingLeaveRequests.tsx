@@ -104,9 +104,9 @@ export default function PendingLeaveRequests() {
 
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
         
-        <AdminSidebar /> 
+        <AdminSidebar/> 
         
         <div className="flex-1 p-4 md:p-8 flex flex-col items-center">
             <h1 className="text-4xl font-bold mb-6 flex items-center gap-3">
