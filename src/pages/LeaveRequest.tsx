@@ -190,7 +190,7 @@ export default function LeaveRequest() {
             <div className="w-full md:w-auto">
                 <StudentSidebar />
             </div>
-            <div className="flex-1 px-4 py-6 md:px-8 md:py-10">
+            <div className="flex-1 px-4 py-6 md:px-8 md:py-10 md:ml-64">
                 <h1 className="text-4xl font-bold mb-4 text-center">Apply your Leave here</h1>
                 <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
 
