@@ -195,7 +195,7 @@ export default function ViewHistory() {
         <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
             <StudentSidebar />
 
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-6 md:ml-64">
                 <h1 className="text-3xl font-bold mb-6 justify-center items-center flex">View Attendance Reports History</h1>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
                     <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
