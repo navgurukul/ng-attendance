@@ -23,7 +23,7 @@ import QRCodeGenerator from "./pages/QRCodeGenerator";
 import StudentRecords from "./pages/StudentRecords";
 import LifecycleTracker from "./pages/LifecycleTracker";
 import ReportsAndDownloads from "./pages/Document";
-import StudentTrackingForm from "./pages/StudentTracking";
+// import StudentTrackingForm from "./pages/StudentTracking";
 
 
 const queryClient = new QueryClient();
@@ -113,14 +113,14 @@ function AppRoutes() {
           }
         />
 
-        <Route
+        {/* <Route
           path="/student/tracking"
           element={
             <ProtectedRoute requiredRole="student">
               <StudentTrackingForm />
             </ProtectedRoute>
           }
-        />
+        /> */}
 
         <Route
           path="/admin/student-report/:studentId"
