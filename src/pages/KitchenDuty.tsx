@@ -109,7 +109,7 @@ export default function KitchenDuty() {
     <div className="flex w-full min-h-screen bg-background pt-20">
       <StudentSidebar />
 
-      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center">
+      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center md:ml-64">
         <h1 className="text-4xl font-bold mb-4">Kitchen Duty</h1>
         <p className="text-muted-foreground mb-6">
           Mark your kitchen duty for today.
