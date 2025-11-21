@@ -5,38 +5,49 @@ import { QrCode, Users, Calendar, FileText, CheckCircle2, Clock } from "lucide-r
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block mb-6 px-6 py-2 bg-primary text-primary-foreground border-[3px] border-foreground shadow-brutal font-bold">
-            BETA VERSION
+    <div className="min-h-screen bg-background pt-20">
+      <section className="container mx-auto px-10 py-2">
+        <div className="grid md:grid-cols-2 gap-5 items-center">
+
+          <div className="text-center md:text-left">
+            <img
+              src="/navgurukul_logo.png"
+              alt="Navgurukul Logo"
+              className="w-50 mx-auto md:mx-0 mb-6"
+            />
+
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              Smart Attendance <br />
+              <span className="text-primary">System</span>
+            </h1>
+
+            <p className="text-lg md:text-xl mb-10 text-muted-foreground max-w-xl">
+              Modern attendance tracking with QR codes, leave management, and real-time analytics.
+            </p>
+
+            <div className="flex gap-4 justify-center md:justify-start flex-wrap">
+              <Link to="/login">
+                <Button size="lg" className="text-lg">
+                  Get Started
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button size="lg" variant="outline" className="text-lg">
+                  Sign Up Free
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-6xl font-bold mb-6 leading-tight">
-            Smart Attendance
-            <br />
-            <span className="text-primary">System</span>
-          </h1>
-          <p className="text-xl mb-10 text-muted-foreground max-w-2xl mx-auto">
-            Modern attendance tracking with QR codes, leave management, and real-time analytics.
-            Built by Parvati, Mahima, and Nasrina.
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link to="/login">
-              <Button size="lg" className="text-lg">
-                Get Started
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button size="lg" variant="outline" className="text-lg">
-                Sign Up Free
-              </Button>
-            </Link>
+          <div className="flex justify-center">
+            <img
+              src="/gairl_with_qr.png"
+              alt="Hero Illustration"
+              className="w-[300px] md:w-[450px] lg:w-[520px]"
+            />
           </div>
+
         </div>
       </section>
-
-      {/* Features Grid */}
       <section className="container mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold text-center mb-12">Core Features</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -101,24 +112,6 @@ export default function Landing() {
           </Card>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center bg-primary border-[4px] border-foreground shadow-brutal-lg p-12">
-          <h2 className="text-4xl font-bold text-primary-foreground mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-primary-foreground/90 mb-8">
-            Join hundreds of students using Smart Attendance System.
-          </p>
-          <Link to="/signup">
-            <Button size="lg" variant="outline" className="bg-background hover:bg-background/90 text-lg">
-              Create Your Account
-            </Button>
-          </Link>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t-[4px] border-foreground py-8">
         <div className="container mx-auto px-4 text-center">
