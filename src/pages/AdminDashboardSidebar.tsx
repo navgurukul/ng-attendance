@@ -22,7 +22,7 @@ const menuItems = [
 export default function AdminSidebar() {
     return (
         <>
-            <div className="hidden md:flex w-64 h-screen bg-white border-r shadow-sm flex-col pt-[80px]">
+            <div className="hidden fixed left-0 top-0 md:flex w-64 h-screen bg-white border-r shadow-sm flex-col pt-[80px]">
 
                 <div className="text-center py-6 border-b">
                     <h1 className="text-3xl font-bold">Admin Panel</h1>
