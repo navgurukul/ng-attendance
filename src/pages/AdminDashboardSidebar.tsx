@@ -22,26 +22,37 @@ const menuItems = [
 export default function AdminSidebar() {
     return (
         <>
-            <div className="hidden md:flex w-64 h-screen bg-white border-r shadow-sm flex-col">
-                
+            <div className="hidden md:flex w-64 h-screen bg-white border-r shadow-sm flex-col pt-[80px]">
+
                 <div className="text-center py-6 border-b">
-                    <h1 className="text-2xl font-bold">Admin Panel</h1>
+                    <h1 className="text-3xl font-bold">Admin Panel</h1>
                 </div>
 
                 <nav className="flex flex-col mt-4">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
+
                         return (
                             <NavLink
                                 key={item.name}
                                 to={item.path}
-                                className={({ isActive }) =>
-                                    `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all ${
+                                className={({ isActive }) => {
+                                    const isDashboard = item.path === "/Admin";
+
+                                    if (isDashboard) {
+                                        return `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all ${
+                                            isActive
+                                                ? "bg-gray-200 text-black"
+                                                : "text-gray-700 hover:bg-gray-100"
+                                        }`;
+                                    }
+
+                                    return `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all ${
                                         isActive
                                             ? "bg-black text-white"
                                             : "text-gray-700 hover:bg-gray-100"
-                                    }`
-                                }
+                                    }`;
+                                }}
                             >
                                 <Icon size={22} />
                                 {item.name}
@@ -49,12 +60,11 @@ export default function AdminSidebar() {
                         );
                     })}
                 </nav>
+
             </div>
 
-
-
+            {/* MOBILE BOTTOM MENU */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-md flex justify-between px-4 py-2 z-50">
-
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -71,7 +81,6 @@ export default function AdminSidebar() {
                         </NavLink>
                     );
                 })}
-
             </div>
         </>
     );
