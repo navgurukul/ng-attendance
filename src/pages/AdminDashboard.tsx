@@ -441,7 +441,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-purple-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchTotalStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.totalStudentsCount}</div>
@@ -450,7 +450,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-blue-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchPresentStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.present}</div>
@@ -459,7 +459,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-card bg-red-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchAbsentStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.absent}</div>
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-card bg-green-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchKitchenDutyStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.kitchen}</div>
@@ -477,7 +477,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-4 border-[3px] border-foreground shadow-brutal bg-card  bg-yellow-300 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchLeaveTypeMenu}
           >
             <div className="text-2xl font-bold mb-1">
