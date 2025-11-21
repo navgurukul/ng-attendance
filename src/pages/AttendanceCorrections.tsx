@@ -113,7 +113,7 @@ export default function AttendanceCorrections() {
      
       <AdminSidebar />
 
-      <div className="flex-1 p-8 pt-[100px]">
+      <div className="flex-1 p-8 pt-[100px] md:ml-64">
         <div className="mb-8 text-center flex flex-col items-center">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <span><FileEdit className="h-8 w-8 text-primary" /></span>

@@ -108,7 +108,7 @@ export default function PendingLeaveRequests() {
 
       <AdminSidebar />
 
-      <div className="flex-1 md:p-8 flex flex-col md:pt-[100px]">
+      <div className="flex-1 md:p-8 flex flex-col md:pt-[100px] md:ml-64">
         <h1 className="text-4xl font-bold mb-4 flex gap-3">
           <CalendarCheck className="h-8 w-8 text-primary" />
           Pending Leave Requests

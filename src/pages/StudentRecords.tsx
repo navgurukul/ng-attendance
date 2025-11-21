@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
+import AdminSidebar from "./AdminDashboardSidebar";
 
 interface StudentRecord {
   id: string;
@@ -184,10 +185,11 @@ export default function StudentRecords() {
 
   
   return (
-    <div className="min-h-screen bg-background flex pt-[100px]">
-      <div className="flex-1 p-8">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+      <AdminSidebar/>
+      <div className="flex-1 p-8 md:ml-64 pt-[100px]">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-bold flex items-center mb-4 flex gap-3">
             <Users className="h-8 w-8 text-primary" />
             Student Records
           </h1>
