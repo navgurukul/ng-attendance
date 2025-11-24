@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { name: "QR Scanner", icon: QrCode, path: "/student/qr-scanner" },
     { name: "Kitchen Duty", icon: ChefHat, path: "/student/kitchen-duty" },
     { name: "Leave Request", icon: CalendarIcon, path: "/student/leave" },
@@ -22,8 +21,8 @@ const menuItems = [
 export default function StudentSidebar() {
     return (
         <>
-            <div className="hidden md:flex w-64 h-screen bg-white border-r shadow-sm flex-col fixed left-0 top-0 pt-20">
-                <div className="text-center py-6 border-b">
+            <div className="hidden md:flex w-64 h-screen bg-background shadow-md flex-col fixed left-0 top-0 pt-20">
+                <div className="text-center py-6 border-b border-gray-200">
                     <h1 className="text-2xl font-bold">Student Panel</h1>
                 </div>
 

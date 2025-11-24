@@ -67,13 +67,13 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex pt-20">
+    <div className="min-h-screen bg-gray-50 flex pt-20">
       <StudentSidebar />
 
-      <div className="container mx-auto px-4 py-8  text-center flex flex-col items-center md:ml-64">
+      <div className="container mx-auto px-4 py-8  text-center flex flex-col items-center md:ml-64 text-sm md:text-base lg:text-lg">
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
+          <h1 className="font-bold mb-2 text-xl md:text-2xl lg:text-4xl">Student Dashboard</h1>
           <p className="text-muted-foreground">
             Welcome back! Mark your attendance and manage leaves.
           </p>
@@ -88,9 +88,9 @@ export default function StudentDashboard() {
                 statusText === "Present"
                   ? "text-green-600"
                   : statusText === "Kitchen Duty"
-                  ? "text-blue-600"
-                  : statusText === "Leave"
                   ? "text-orange-600"
+                  : statusText === "Leave"
+                  ? "text-blue-600"
                   : statusText === "Loading..."
                   ? "text-gray-600"
                   : "text-red-600"

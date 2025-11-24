@@ -53,7 +53,9 @@ function AppRoutes() {
     <>
       <Navbar
         isAuthenticated={!!user}
-        userRole={role || 'student'}
+        userRole={user?.user_metadata?.role}
+        userName={user?.user_metadata?.full_name}
+        userEmail={user?.email}
         onLogout={signOut}
       />
       <Routes>

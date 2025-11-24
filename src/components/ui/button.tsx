@@ -5,14 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold border-[3px] border-border transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:translate-x-[2px] active:translate-y-[2px]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-[5px]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-brutal hover:shadow-brutal-sm",
-        destructive: "bg-destructive text-destructive-foreground shadow-brutal hover:shadow-brutal-sm",
-        outline: "bg-background text-foreground shadow-brutal hover:shadow-brutal-sm",
-        secondary: "bg-secondary text-secondary-foreground shadow-brutal hover:shadow-brutal-sm",
+        default:
+          "bg-primary text-primary-foreground border-[1px] border-primary shadow-md hover:bg-[hsl(25,95%,50%)] hover:shadow-lg active:translate-y-[2px]",
+
+        outline: "bg-background text-foreground border-[3px] border-black shadow-md hover:shadow-lg",
+
+        secondary:
+          "bg-secondary text-secondary-foreground border-[3px] border-secondary shadow-md hover:shadow-lg",
+        destructive:
+          "bg-destructive text-destructive-foreground border-[3px] border-destructive shadow-md hover:shadow-lg",
         ghost: "border-transparent shadow-none hover:bg-muted",
         link: "border-transparent shadow-none text-primary underline-offset-4 hover:underline",
       },
@@ -27,12 +32,15 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
+
+
+
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

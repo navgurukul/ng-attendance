@@ -167,17 +167,17 @@ export default function QRScanner() {
 
   return (
 
-    <div className="flex w-full min-h-screen bg-background pt-20">
+    <div className="flex w-full min-h-screen bg-gray-50 pt-20">
 
       <StudentSidebar />
 
-      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 md:ml-64">
+      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 md:ml-64 text-sm md:text-base lg:text-lg">
 
-        <h1 className="text-4xl font-bold mb-4 text-center">Scan Attendance</h1>
+        <h1 className="font-bold mb-4 text-center text-xl md:text-2xl lg:text-4xl">Scan Attendance</h1>
         <p className="text-muted-foreground mb-6 text-center">Scan the QR code to mark attendance.</p>
 
 
-        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
+        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-md bg-card max-w-xl mx-auto hover:shadow-lg rounded-xl transition-all">
 
 
           <div className="text-center mb-6">
