@@ -106,16 +106,16 @@ export default function KitchenDuty() {
   };
 
   return (
-    <div className="flex w-full min-h-screen bg-background pt-20">
+    <div className="flex w-full min-h-screen bg-gray-50 pt-20">
       <StudentSidebar />
 
-      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center md:ml-64">
-        <h1 className="text-4xl font-bold mb-4">Kitchen Duty</h1>
+      <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center md:ml-64 text-sm md:text-base lg:text-lg">
+        <h1 className="font-bold mb-4 text-xl md:text-2xl lg:text-4xl">Kitchen Duty</h1>
         <p className="text-muted-foreground mb-6">
           Mark your kitchen duty for today.
         </p>
 
-        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-xl mx-auto">
+        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-md bg-card max-w-xl mx-auto hover:shadow-lg rounded-xl transition-all">
           <div className="flex items-center gap-3 mb-4 text-center justify-center">
             <ChefHat className="h-6 w-6" />
             <h2 className="text-xl font-bold">Kitchen Duty Today</h2>

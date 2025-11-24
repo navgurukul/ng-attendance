@@ -192,29 +192,29 @@ export default function ViewHistory() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
+        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row mb-[100px] pt-20">
             <StudentSidebar />
 
-            <div className="container mx-auto p-6 md:ml-64">
-                <h1 className="text-3xl font-bold mb-6 justify-center items-center flex">View Attendance Reports History</h1>
+            <div className="container mx-auto p-6 md:ml-64 text-sm md:text-base lg:text-lg">
+                <h1 className="font-bold mb-6 justify-center items-center flex text-xl md:text-2xl lg:text-4xl">View Attendance Reports History</h1>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
-                    <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+                    <Card className="p-6 border-[1.5px] border-foreground shadow-md bg-green-700 text-background hover:shadow-lg rounded-xl transition-all">
                         <div className="text-3xl font-bold mb-1">{stats.present}</div>
-                        <div className="text-sm text-muted-foreground">Days Present</div>
+                        <div className="text-sm text-background">Days Present</div>
                     </Card>
-                    <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+                    <Card className="p-6 border-[1.5px] border-foreground shadow-md bg-primary text-background hover:shadow-lg rounded-xl transition-all">
                         <div className="text-3xl font-bold mb-1">{stats.kitchenDuty}</div>
-                        <div className="text-sm text-muted-foreground">Kitchen Duty</div>
+                        <div className="text-sm text-background">Kitchen Duty</div>
                     </Card>
-                    <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+                    <Card className="p-6 border-[1.5px] border-foreground shadow-md bg-red-700 text-background hover:shadow-lg rounded-xl transition-all">
                         <div className="text-3xl font-bold mb-1">{stats.absent}</div>
-                        <div className="text-sm text-muted-foreground">Days Absent</div>
+                        <div className="text-sm text-background">Days Absent</div>
                     </Card>
-                    <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card">
+                    <Card className="p-6 border-[1.5px] border-foreground shadow-md bg-blue-600 text-background hover:shadow-lg rounded-xl transition-all">
                         <div className="text-3xl font-bold mb-1">{stats.leaves}</div>
-                        <div className="text-sm text-muted-foreground">Leaves Taken</div>
+                        <div className="text-sm text-background">Leaves Taken</div>
                     </Card>
-                    <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-primary text-primary-foreground">
+                    <Card className="p-6 border-[1.5px] border-foreground shadow-md  text-primary-foreground bg-gray-500 hover:shadow-lg rounded-xl transition-all">
                         <div className="text-3xl font-bold mb-1">{stats.percentage}%</div>
                         <div className="text-sm">Attendance Rate</div>
                     </Card>
