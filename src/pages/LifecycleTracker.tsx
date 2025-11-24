@@ -147,9 +147,9 @@ export default function LifecycleTracker() {
 
       <AdminSidebar />
 
-      <div className="flex-1 p-8 pt-[100px] md:ml-64">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+      <div className="flex-1 p-8 pt-[100px] md:ml-64 text-sm md:text-base lg:text-lg">
+        <div className="mb-8 flex flex-col items-center">
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3  text-xl md:text-2xl lg:text-4xl">
             <UserPlus className="h-8 w-8 text-primary" />
             Lifecycle Tracker
           </h1>

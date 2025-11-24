@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/Admin" },
+    // { name: "Dashboard", icon: LayoutDashboard, path: "/Admin" },
     { name: "QR Generator", icon: QrCode, path: "/admin/qr-generator" },
     { name: "Leave Requests", icon: CalendarIcon, path: "/admin/leave" },
     { name: "Correction Requests", icon: Pencil, path: "/admin/correction" },

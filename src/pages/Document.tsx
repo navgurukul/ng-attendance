@@ -22,16 +22,16 @@ export default function ReportsAndDownloads() {
      
       <AdminSidebar />
 
-      <div className="flex-1 p-8 pt-[100px] md:ml-64">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+      <div className="flex-1 p-8 pt-[100px] md:ml-64 text-sm md:text-base lg:text-lg">
+        <div className="mb-8 flex flex-col items-center">
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3 text-xl md:text-2xl lg:text-4xl">
             <Download className="h-8 w-8 text-primary" />
             Reports & Downloads
           </h1>
           <p className="text-muted-foreground">Generate and export key attendance and leave reports.</p>
         </div>
 
-        <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-3xl">
+        <Card className="p-6 bg-card max-w-6xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-primary p-2 border-[3px] border-foreground">
               <Download className="h-6 w-6 text-primary-foreground" />
@@ -52,7 +52,7 @@ export default function ReportsAndDownloads() {
           </div>
         </Card>
         
-        <Card className="mt-6 p-6 border-[3px] border-dashed border-foreground bg-muted/30 max-w-3xl">
+        <Card className="mt-6 p-6 border-[3px] border-dashed border-foreground bg-muted/30 max-w-6xl">
             <h3 className="font-bold text-lg">Report History</h3>
             <p className="text-sm text-muted-foreground">All generated reports will be listed here for download.</p>
         </Card>

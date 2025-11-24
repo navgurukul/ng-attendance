@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QrCode, Users, Calendar, FileText, CheckCircle2, Clock } from "lucide-react";
+import { Twitter, Linkedin, Mail } from "lucide-react";
 
 export default function Landing() {
   return (
@@ -112,15 +113,99 @@ export default function Landing() {
           </Card>
         </div>
       </section>
-      {/* Footer */}
-      <footer className="border-t-[4px] border-foreground py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">
-            Built with ❤️ by <span className="font-bold">Parvati, Mahima, and Nasrina</span>
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            © 2025 Smart Attendance System. All rights reserved.
-          </p>
+      <footer className="bg-gray-100 text-black pt-12 pb-6 border-t border-gray-300">
+        <div className="container mx-auto px-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8">
+
+           
+            <div className="md:col-span-1">
+
+             
+              <p className="text-1xl font-bold mb-3">
+               
+                <span style={{ color: '#FF7F50' }}>Anish Jadhav Memorial</span><br />
+                
+                <span className="text-black">Foundation</span>
+              </p>
+
+              <p className="text-2xl font-bold mb-2">
+                <span className="text-primary">Smart</span> Attendance
+              </p>
+              <p className="text-sm text-gray-700"> 
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-primary uppercase">Quick Links</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link to="/features" className="text-gray-800 hover:text-primary transition-colors"> 
+                    Core Features
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="text-gray-800 hover:text-primary transition-colors"> 
+                    Admin Login
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/signup" className="text-gray-800 hover:text-primary transition-colors">
+                    Student Signup
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-primary uppercase">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link to="/faq" className="text-gray-800 hover:text-primary transition-colors"> 
+                    FAQ & Help
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-gray-800 hover:text-primary transition-colors"> 
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="text-gray-800 hover:text-primary transition-colors"> 
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-primary uppercase">Connect</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center text-gray-800 hover:text-primary transition-colors"> 
+                  <Mail className="h-5 w-5 mr-3" />
+                  <a href="mailto:support@navgurukul.org">support@navgurukul.org</a>
+                </div>
+              </div>
+
+              <div className="flex space-x-4 mt-6">
+                <a href="https://twitter.com/navgurukul" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                  <Twitter className="h-6 w-6 text-gray-700 hover:text-primary transition-colors" /> 
+                </a>
+                <a href="https://www.linkedin.com/school/navgurukul/posts/?feedView=all" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                  <Linkedin className="h-6 w-6 text-gray-700 hover:text-primary transition-colors" /> 
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+        <div className="border-t border-gray-300 mt-4 pt-4 text-center text-xs text-gray-700"> 
+            <p>
+              &copy; {new Date().getFullYear()} Smart Attendance System. All rights reserved.
+            </p>
+            <p className="mt-1">
+              Developed by <span className="font-medium text-gray-800">Mahima, Nasrina and Parvati</span>
+            </p>
+          </div>
         </div>
       </footer>
     </div>
