@@ -6,7 +6,7 @@ import { QrCode, Users, Calendar, FileText, CheckCircle2, Clock } from "lucide-r
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background pt-20">
-      <section className="container mx-auto px-10 py-2">
+      <section className="container mx-auto px-10 py-2 bg-gray-60">
         <div className="grid md:grid-cols-2 gap-5 items-center">
 
           <div className="text-center md:text-left">
@@ -48,21 +48,22 @@ export default function Landing() {
 
         </div>
       </section>
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-16 bg-[#f9f9f9]">
         <h2 className="text-4xl font-bold text-center mb-12">Core Features</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
-              <QrCode className="h-8 w-8 text-primary-foreground" />
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
+              <QrCode className="h-8 w-8 text-primary-foreground " />
             </div>
             <h3 className="text-xl font-bold mb-2">QR Code Scanning</h3>
             <p className="text-muted-foreground">
-              One scan per day for quick and contactless attendance marking. Simple and efficient.
+              One scan per day for quick and contactless attendance marking.
             </p>
           </Card>
 
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
+
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
               <Calendar className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="text-xl font-bold mb-2">Leave Management</h3>
@@ -71,8 +72,8 @@ export default function Landing() {
             </p>
           </Card>
 
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
               <FileText className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="text-xl font-bold mb-2">Detailed Reports</h3>
@@ -81,8 +82,8 @@ export default function Landing() {
             </p>
           </Card>
 
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
               <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="text-xl font-bold mb-2">Kitchen Duty</h3>
@@ -91,8 +92,8 @@ export default function Landing() {
             </p>
           </Card>
 
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
               <Users className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="text-xl font-bold mb-2">Admin Dashboard</h3>
@@ -101,8 +102,8 @@ export default function Landing() {
             </p>
           </Card>
 
-          <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card hover:shadow-brutal-lg transition-all">
-            <div className="bg-primary p-3 w-fit border-[3px] border-foreground mb-4">
+          <Card className="p-6 border border-gray-300 bg-[#ffffff] shadow-md hover:shadow-lg rounded-xl transition-all">
+            <div className="bg-primary p-3 w-fit border border-gray-300 mb-4 rounded-[5px]">
               <Clock className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="text-xl font-bold mb-2">Correction Requests</h3>

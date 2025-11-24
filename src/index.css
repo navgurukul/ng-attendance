@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
 
 @layer base {
   :root {
@@ -17,7 +14,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 217 100% 56%;
+    --primary: 20 95% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 95%;
@@ -95,7 +92,7 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-['Space_Grotesk'];
   }
   
-  /* Neu-Brutalist shadow utilities */
+
   .shadow-brutal {
     box-shadow: 4px 4px 0 hsl(var(--foreground));
   }
