@@ -21,7 +21,7 @@ import PendingLeaveRequests from "./pages/PendingLeaveRequests";
 import AttendanceCorrections from "./pages/AttendanceCorrections";
 import QRCodeGenerator from "./pages/QRCodeGenerator";
 import StudentRecords from "./pages/StudentRecords";
-import LifecycleTracker from "./pages/LifecycleTracker";
+// import LifecycleTracker from "./pages/LifecycleTracker";
 import ReportsAndDownloads from "./pages/Document";
 // import StudentTrackingForm from "./pages/StudentTracking";
 
@@ -168,14 +168,14 @@ function AppRoutes() {
           }
         />
 
-        <Route
+        {/* <Route
           path="/admin/tracking"
           element={
             <ProtectedRoute requiredRole="admin">
               <LifecycleTracker />
             </ProtectedRoute>
           }
-        />
+        /> */}
 
         <Route
           path="/admin/qr-generator"

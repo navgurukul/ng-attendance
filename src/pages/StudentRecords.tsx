@@ -185,11 +185,11 @@ export default function StudentRecords() {
 
   
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row ">
       <AdminSidebar/>
-      <div className="flex-1 p-8 md:ml-64 pt-[100px]">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold flex items-center mb-4 flex gap-3">
+      <div className="flex-1 p-8 md:ml-64 pt-[100px] text-sm md:text-base lg:text-lg text-center">
+        <div className="mb-8 flex flex-col items-center">
+          <h1 className="text-4xl font-bold flex items-center mb-4 gap-3 text-xl md:text-2xl lg:text-4xl">
             <Users className="h-8 w-8 text-primary" />
             Student Records
           </h1>

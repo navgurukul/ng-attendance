@@ -104,20 +104,20 @@ export default function PendingLeaveRequests() {
 
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row mb-[100px] pt-20">
 
       <AdminSidebar />
 
-      <div className="flex-1 md:p-8 flex flex-col md:pt-[100px] md:ml-64">
-        <h1 className="text-4xl font-bold mb-4 flex gap-3">
+      <div className="container mx-auto p-6 md:ml-64 text-sm md:text-base lg:text-lg">
+        <h1 className="font-bold mb-2 flex gap-3 justify-center items-center text-xl md:text-2xl lg:text-4xl">
           <CalendarCheck className="h-8 w-8 text-primary" />
           Pending Leave Requests
         </h1>
-        <p className="text-muted-foreground mb-6 ml-10">Review and process all student leave applications.</p>
+        <p className="text-muted-foreground mb-4 ml-10 text-center">Review and process all student leave applications.</p>
 
-        <div className="w-full max-w-4xl grid lg:grid-cols-1 gap-6 mr-50">
+        {/* <div className="w-full max-w-4xl grid lg:grid-cols-1 gap-6 mr-50"> */}
 
-          <Card className="p-6 border-[2px] border-foreground shadow-brutal bg-card">
+          <Card className="p-4 md:p-4 border-[3px] border-foreground shadow-brutal bg-card max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
                 <Calendar className="h-6 w-6 text-primary-foreground" />
@@ -147,7 +147,7 @@ export default function PendingLeaveRequests() {
                         {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
                         <span className="text-muted-foreground">({daysDiff} {daysDiff === 1 ? 'day' : 'days'})</span>
                       </div>
-                      <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground">{leave.reason}</div>
+                      <div className="text-sm mb-3 p-2 bg-muted border-[2px] border-foreground break-words">{leave.reason}</div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -173,7 +173,7 @@ export default function PendingLeaveRequests() {
               )}
             </div>
           </Card>
-        </div>
+        {/* </div> */}
       </div>
     </div>
   );

@@ -87,16 +87,16 @@ export default function QRCodeGenerator() {
      
       <AdminSidebar />
 
-      <div className="flex-1 p-8 pt-[100px] md:ml-64">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+      <div className="flex-1 p-8 pt-[100px] md:ml-64 text-sm md:text-base lg:text-lg">
+        <div className="mb-8 flex flex-col items-center">
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3 text-xl md:text-2xl lg:text-4xl">
             <QrCodeIcon className="h-8 w-8 text-primary" />
             QR Code Management
           </h1>
           <p className="text-muted-foreground">Generate and manage daily attendance QR codes.</p>
         </div>
 
-        <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-2xl">
+        <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-card max-w-4xl text-center mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-primary p-2 border-[3px] border-foreground">
               <QrCodeIcon className="h-6 w-6 text-primary-foreground" />

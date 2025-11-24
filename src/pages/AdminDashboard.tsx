@@ -431,13 +431,13 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background flex">
       <AdminSidebar />
       <div className="container mx-auto px-4 py-8 pt-[100px] md:ml-64">
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Manage attendance, leaves, and student records.</p>
         </div>
 
 
-        <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
 
 
           <Card
