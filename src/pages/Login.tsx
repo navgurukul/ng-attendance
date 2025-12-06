@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
 
@@ -18,34 +19,40 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      toast.error(error.message || "Failed to log in");
-    } else {
-      toast.success("Logged in successfully!");
+    // Add this check at the very top
+    if (!email.endsWith("@navgurukul.org")) {
+      toast.error("Only navgurukul.org emails are allowed");
+      setLoading(false);
+      return;
     }
-    
+
+    const { error } = await signIn(email, password);
+
+    if (error) toast.error(error.message || "Failed to log in");
+    else toast.success("Logged in successfully!");
+
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center pt-[100px]">
-      <Card className="w-full max-w-md p-8 border-[4px] border-foreground shadow-brutal-lg">
-        <div className="flex justify-center mb-6">
-          <div className="bg-primary p-4 border-[3px] border-foreground shadow-brutal">
-            <GraduationCap className="h-12 w-12 text-primary-foreground" />
+    <div className="min-h-screen bg-background flex items-center justify-center pt-[80px]">
+      <Card className="w-full max-w-sm p-6 border-[2 px] border-[#333] shadow-lg rounded-xl">
+        <div className="flex justify-center mb-5">
+          <div className="bg-primary p-3 border border-[#333] rounded-md shadow">
+            <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </div>
         </div>
-        
-        <h1 className="text-3xl font-bold text-center mb-2">Welcome Back</h1>
-        <p className="text-center text-muted-foreground mb-8">
+
+        <h1 className="text-2xl font-bold text-center mb-1">Welcome Back</h1>
+        <p className="text-center text-muted-foreground mb-6 text-sm">
           Sign in to access your dashboard
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-bold">Email</Label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -53,41 +60,50 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="border-[3px] border-foreground h-12 shadow-brutal-sm focus:shadow-brutal"
+              className="h-11 border-[1.5px] border-[#333]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-bold">Password</Label>
+          {/* Password with eye icon */}
+          <div className="space-y-1.5 relative">
+            <Label htmlFor="password" className="text-sm font-medium">
+              Password
+            </Label>
             <Input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="border-[3px] border-foreground h-12 shadow-brutal-sm focus:shadow-brutal"
+              className="h-11 border-[1.5px] border-[#333] pr-10"
             />
+
+            {/* Eye / Hide Icon */}
+            <button
+              type="button"
+              className="absolute right-3 top-9 text-gray-600 hover:text-black"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full h-11" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-5 text-center">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary font-bold hover:underline">
+            <Link
+              to="/signup"
+              className="text-primary font-semibold hover:underline"
+            >
               Sign up
             </Link>
           </p>
-        </div>
-
-        <div className="mt-4 p-4 bg-muted border-[3px] border-foreground">
-          <p className="text-xs font-bold mb-2">Getting Started:</p>
-          <p className="text-xs mb-1">1. Sign up to create an account (student by default)</p>
-          <p className="text-xs">2. Admins must be assigned via Supabase dashboard</p>
         </div>
       </Card>
     </div>

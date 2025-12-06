@@ -177,7 +177,7 @@ export default function QRScanner() {
         <p className="text-muted-foreground mb-6 text-center">Scan the QR code to mark attendance.</p>
 
 
-        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-md bg-card max-w-xl mx-auto hover:shadow-lg rounded-xl transition-all">
+        <Card className="p-4 md:p-6 border-[2px] border-foreground shadow-md bg-card max-w-xl mx-auto hover:shadow-lg rounded-xl transition-all">
 
 
           <div className="text-center mb-6">
@@ -191,7 +191,7 @@ export default function QRScanner() {
             !scanning ? (
               <>
 
-                <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto border-[3px] border-foreground bg-muted flex items-center justify-center">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto border-[2px] border-foreground bg-muted flex items-center justify-center">
 
                   <Camera className="h-32 w-32 text-muted-foreground" />
                 </div>
@@ -213,7 +213,7 @@ export default function QRScanner() {
             )
           ) : (
             <div className="text-center py-8">
-              <div className="w-24 h-24 mx-auto bg-primary border-[3px] border-foreground flex items-center justify-center mb-4">
+              <div className="w-24 h-24 mx-auto bg-primary border-[2px] border-foreground flex items-center justify-center mb-4">
                 <svg
                   className="h-16 w-16 text-primary-foreground"
                   fill="none"

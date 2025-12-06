@@ -36,7 +36,7 @@ export default function StudentSidebar() {
                                 to={item.path}
                                 className={({ isActive }) =>
                                     `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all
-                                    ${isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"}`
+                                    ${isActive ? "bg-orange-500 text-white" : "text-gray-700 hover:bg-gray-100"}`
                                 }
                             >
                                 <Icon size={22} />

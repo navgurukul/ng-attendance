@@ -441,7 +441,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-purple-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-6 h-40 border-[2px] border-foreground shadow-brutal bg-purple-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchTotalStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.totalStudentsCount}</div>
@@ -450,7 +450,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-blue-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-6 h-40 border-[2px] border-foreground shadow-brutal bg-blue-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchPresentStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.present}</div>
@@ -459,7 +459,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card bg-red-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-6 h-40 border-[2px] border-foreground shadow-brutal bg-card bg-red-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchAbsentStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.absent}</div>
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card bg-green-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+          className="p-6 h-40 border-[2px] border-foreground shadow-brutal bg-card bg-green-200 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchKitchenDutyStudents}
           >
             <div className="text-2xl font-bold mb-1">{stats.kitchen}</div>
@@ -477,7 +477,7 @@ export default function AdminDashboard() {
 
 
           <Card
-            className="p-4 border-[3px] border-foreground shadow-brutal bg-card  bg-yellow-300 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
+            className="p-6 h-40 border-[2px] border-foreground shadow-brutal bg-card  bg-yellow-300 cursor-pointer transition-transform duration-100 active:translate-y-0.5 active:shadow-none"
             onClick={fetchLeaveTypeMenu}
           >
             <div className="text-2xl font-bold mb-1">
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
           {topStudent && (
-            <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-yellow-50">
+            <Card className="p-6 border-[2px] border-foreground shadow-brutal bg-yellow-50">
               <div className="flex items-center gap-4 mb-2">
                 <Trophy className="h-8 w-8 text-yellow-600 fill-yellow-400" />
                 <div>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
           )}
 
           {bottomStudent && (
-            <Card className="p-6 border-[3px] border-foreground shadow-brutal bg-red-50">
+            <Card className="p-6 border-[2px] border-foreground shadow-brutal bg-red-50">
               <div className="flex items-center gap-4 mb-2">
                 <TrendingDown className="h-8 w-8 text-red-600" />
                 <div>
@@ -528,14 +528,14 @@ export default function AdminDashboard() {
         </div>
 
         <Dialog open={isPresentListOpen} onOpenChange={setIsPresentListOpen}>
-          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+          <DialogContent className="sm:max-w-[425px] border-[2px] border-foreground shadow-brutal">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Students Present Today ({stats.present})</DialogTitle>
             </DialogHeader>
             {listLoading ? (
               <p className="py-4 text-center text-muted-foreground">Loading names...</p>
             ) : presentStudents.length > 0 ? (
-              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
                 <ul className="space-y-4">
                   {presentStudents.map((student, index) => (
                     <li
@@ -555,14 +555,14 @@ export default function AdminDashboard() {
         </Dialog>
 
         <Dialog open={isAbsentListOpen} onOpenChange={setIsAbsentListOpen}>
-          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+          <DialogContent className="sm:max-w-[425px] border-[2px] border-foreground shadow-brutal">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Students Absent Today ({stats.absent})</DialogTitle>
             </DialogHeader>
             {absentListLoading ? (
               <p className="py-4 text-center text-muted-foreground">Loading names...</p>
             ) : absentStudents.length > 0 ? (
-              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
                 <ul className="space-y-4">
                   {absentStudents.map((student, index) => (
                     <li
@@ -590,7 +590,7 @@ export default function AdminDashboard() {
             {totalListLoading ? (
               <p className="py-4 text-center text-muted-foreground">Loading student list...</p>
             ) : totalStudents.length > 0 ? (
-              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
                 <ul className="space-y-4">
                   {totalStudents.map((student, index) => (
                     <li
@@ -610,14 +610,14 @@ export default function AdminDashboard() {
         </Dialog>
 
         <Dialog open={isKitchenListOpen} onOpenChange={setIsKitchenListOpen}>
-          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+          <DialogContent className="sm:max-w-[425px] border-[2px] border-foreground shadow-brutal">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Students on Kitchen Duty Today ({stats.kitchen})</DialogTitle>
             </DialogHeader>
             {kitchenListLoading ? (
               <p className="py-4 text-center text-muted-foreground">Loading names...</p>
             ) : kitchenDutyStudents.length > 0 ? (
-              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
                 <ul className="space-y-4">
                   {kitchenDutyStudents.map((student, index) => (
                     <li
@@ -641,7 +641,7 @@ export default function AdminDashboard() {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">Select Leave Type</DialogTitle>
             </DialogHeader>
-            <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+            <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
               <ul className="space-y-2">
                 {LEAVE_TYPES_MENU.map((leave) => (
                   <li key={leave.db_name}>
@@ -666,14 +666,14 @@ export default function AdminDashboard() {
 
 
         <Dialog open={isSpecificLeaveListOpen} onOpenChange={setIsSpecificLeaveListOpen}>
-          <DialogContent className="sm:max-w-[425px] border-[3px] border-foreground shadow-brutal">
+          <DialogContent className="sm:max-w-[425px] border-[2px] border-foreground shadow-brutal">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">{specificLeaveType} ({specificLeaveStudents.length})</DialogTitle>
             </DialogHeader>
             {specificListLoading ? (
               <p className="py-4 text-center text-muted-foreground">Loading student list...</p>
             ) : specificLeaveStudents.length > 0 ? (
-              <ScrollArea className="h-72 w-full rounded-md border-[3px] border-foreground p-4 shadow-brutal-sm">
+              <ScrollArea className="h-72 w-full rounded-md border-[2px] border-foreground p-4 shadow-brutal-sm">
                 <ul className="space-y-4">
                   {specificLeaveStudents.map((student, index) => (
                     <li

@@ -49,7 +49,7 @@ export default function AdminSidebar() {
 
                                     return `flex items-center gap-3 px-6 py-3 text-lg font-medium transition-all ${
                                         isActive
-                                            ? "bg-black text-white"
+                                            ? "bg-orange-500 text-white"
                                             : "text-gray-700 hover:bg-gray-100"
                                     }`;
                                 }}
@@ -73,7 +73,7 @@ export default function AdminSidebar() {
                             to={item.path}
                             className={({ isActive }) =>
                                 `flex flex-col items-center p-2 ${
-                                    isActive ? "text-black" : "text-gray-500"
+                                    isActive ? "text-orange" : "text-gray-500"
                                 }`
                             }
                         >
