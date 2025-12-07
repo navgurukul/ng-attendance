@@ -18,6 +18,7 @@ export default function QRScanner() {
     if (user) checkTodayAttendance();
   }, [user]);
 
+
   const checkTodayAttendance = async () => {
     if (!user) return;
 

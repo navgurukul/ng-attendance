@@ -15,6 +15,7 @@ const exportToCsv = (data) => {
     return;
   }
 
+
   const headers = ["Status", "Department", "First Name", "Last Name", "Email", "Date", "Company Name", "Job Type", "Reason", "Document URL"];
 
   
