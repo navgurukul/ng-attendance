@@ -1,3 +1,5 @@
+
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -105,31 +107,44 @@ export default function KitchenDuty() {
     setLoading(false);
   };
 
+  // Confirmation alert
+  const handleConfirm = () => {
+    const ok = window.confirm("Do you really have kitchen duty today?");
+    if (ok) {
+      handleKitchenDuty();
+    } else {
+      toast.info("Kitchen duty not marked");
+    }
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-gray-50 pt-20">
       <StudentSidebar />
 
       <div className="flex-1 px-4 py-6 md:px-8 md:py-10 text-center md:ml-64 text-sm md:text-base lg:text-lg">
-        <h1 className="font-bold mb-4 text-xl md:text-2xl lg:text-4xl">Kitchen Duty</h1>
+        <h1 className="font-bold mb-4 text-xl md:text-2xl lg:text-4xl">
+          Kitchen Duty
+        </h1>
         <p className="text-muted-foreground mb-6">
           Mark your kitchen duty for today.
         </p>
 
-        <Card className="p-4 md:p-6 border-[3px] border-foreground shadow-md bg-card max-w-xl mx-auto hover:shadow-lg rounded-xl transition-all">
-          <div className="flex items-center gap-3 mb-4 text-center justify-center">
-            <ChefHat className="h-6 w-6" />
-            <h2 className="text-xl font-bold">Kitchen Duty Today</h2>
+        {/* BIGGER CARD */}
+        <Card className="p-12 md:p-14 border-[2px] border-[#111] shadow-lg bg-card max-w-3xl mx-auto hover:shadow-2xl rounded-2xl transition-all">
+          <div className="flex items-center gap-4 mb-8 text-center justify-center">
+            <ChefHat className="h-10 w-10" />
+            <h2 className="text-3xl font-bold">Kitchen Duty Today</h2>
           </div>
 
-          <div className="text-center mb-4 text-lg font-semibold">
+          <div className="text-center mb-8 text-2xl font-semibold">
             {todayMarked ? "✓ Already Marked" : "Not marked yet"}
           </div>
 
+          {/* DARK ORANGE BUTTON */}
           <Button
-            variant="outline"
-            className="w-full"
+            className="w-full bg-orange-600 text-white font-semibold rounded-xl py-7 text-xl hover:bg-orange-600"
             disabled={loading || todayMarked}
-            onClick={handleKitchenDuty}
+            onClick={handleConfirm}
           >
             Mark Kitchen Duty
           </Button>
@@ -138,4 +153,3 @@ export default function KitchenDuty() {
     </div>
   );
 }
-

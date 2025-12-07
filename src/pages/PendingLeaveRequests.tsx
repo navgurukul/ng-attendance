@@ -117,7 +117,7 @@ export default function PendingLeaveRequests() {
 
         {/* <div className="w-full max-w-4xl grid lg:grid-cols-1 gap-6 mr-50"> */}
 
-          <Card className="p-4 md:p-4 border-[3px] border-foreground shadow-brutal bg-card max-w-4xl mx-auto">
+        <Card className="p-12 md:p-14 border-[2px] border-[#111] shadow-lg bg-card max-w-3xl mx-auto hover:shadow-2xl rounded-2xl transition-all">
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-primary p-2 border-[3px] border-foreground">
                 <Calendar className="h-6 w-6 text-primary-foreground" />

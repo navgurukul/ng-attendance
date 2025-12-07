@@ -5,22 +5,60 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-[5px]",
+  `inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold
+  transition-all duration-300
+  focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50
+  [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0
+  rounded-[4px]
+  active:translate-y-[2px]`,
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground border-[1px] border-primary shadow-md hover:bg-[hsl(25,95%,50%)] hover:shadow-lg active:translate-y-[2px]",
+        default: `
+          bg-primary text-primary-foreground 
+          border-[2px] border-[#222]
+          shadow-[4px_4px_0_#d3d3d3]
+          hover:shadow-[8px_8px_0_#d3d3d3]
+          hover:translate-y-[-2px]
+          hover:bg-[hsl(20,95%,45%)]
+          transition-all
+        `,
 
-        outline: "bg-background text-foreground border-[3px] border-black shadow-md hover:shadow-lg",
+        outline: `
+          bg-background text-foreground 
+          border-[2px] border-[#222]
+          shadow-[4px_4px_0_#d3d3d3]
+          hover:shadow-[8px_8px_0_#d3d3d3]
+          hover:translate-y-[-2px]
+        `,
 
-        secondary:
-          "bg-secondary text-secondary-foreground border-[3px] border-secondary shadow-md hover:shadow-lg",
-        destructive:
-          "bg-destructive text-destructive-foreground border-[3px] border-destructive shadow-md hover:shadow-lg",
-        ghost: "border-transparent shadow-none hover:bg-muted",
-        link: "border-transparent shadow-none text-primary underline-offset-4 hover:underline",
+        secondary: `
+          bg-secondary text-secondary-foreground 
+          border-[2px] border-[#222]
+          shadow-[4px_4px_0_#d3d3d3]
+          hover:shadow-[8px_8px_0_#d3d3d3]
+          hover:translate-y-[-2px]
+        `,
+
+        destructive: `
+          bg-destructive text-destructive-foreground
+          border-[2px] border-[#222]
+          shadow-[4px_4px_0_#d3d3d3]
+          hover:shadow-[8px_8px_0_#d3d3d3]
+          hover:translate-y-[-2px]
+        `,
+
+        ghost: `
+          border-none shadow-none 
+          hover:bg-muted
+        `,
+        
+        link: `
+          border-none shadow-none 
+          text-primary underline-offset-4 hover:underline
+        `,
       },
+
       size: {
         default: "h-12 px-6 py-3",
         sm: "h-10 px-4",
@@ -35,20 +73,23 @@ const buttonVariants = cva(
   }
 );
 
-
-
-
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof buttonVariants> {
+    VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
-  },
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
 );
 Button.displayName = "Button";
 
