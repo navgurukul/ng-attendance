@@ -18,6 +18,7 @@ const menuItems = [
     { name: "View History", icon: History, path: "/student/view-history" },
 ];
 
+
 export default function StudentSidebar() {
     return (
         <>

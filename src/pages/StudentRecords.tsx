@@ -33,6 +33,7 @@ interface StudentRecord {
   history?: HistoryEntry[]; // added: full day-by-day history
 }
 
+
 const searchQuerySchema = z.string().max(100, "Search query too long");
 
 export default function StudentRecords() {

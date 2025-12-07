@@ -15,6 +15,7 @@ export default function StudentDashboard() {
     evaluateStatus();
   }, [user]);
 
+
   const evaluateStatus = async () => {
     const now = new Date();
 
