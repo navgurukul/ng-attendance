@@ -29,6 +29,7 @@ const correctionRequestSchema = z.object({
     .max(500, "Reason must be less than 500 characters"),
 });
 
+
 interface CorrectionRequest {
   id: string;
   attendance_date: string;
