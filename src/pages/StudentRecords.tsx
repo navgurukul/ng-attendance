@@ -18,6 +18,7 @@ interface HistoryEntry {
   status: "present" | "kitchen" | "leave" | "absent" | "unknown";
 }
 
+
 interface StudentRecord {
   id: string;
   full_name: string;
