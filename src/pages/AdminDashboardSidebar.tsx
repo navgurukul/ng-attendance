@@ -31,7 +31,6 @@ export default function AdminSidebar() {
                 <nav className="flex flex-col mt-4">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
-
                         return (
                             <NavLink
                                 key={item.name}
