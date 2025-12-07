@@ -19,6 +19,7 @@ interface CorrectionRequest {
   };
 }
 
+
 export default function AttendanceCorrections() {
   const { user } = useAuth();
   const [pendingCorrections, setPendingCorrections] = useState<CorrectionRequest[]>([]);
