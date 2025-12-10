@@ -250,7 +250,7 @@ const StudentReportPage = () => {
 
         <div className="overflow-x-auto border-[2px] border-[#111]">
           <table className="min-w-full divide-y divide-foreground/50">
-            <thead className="bg-primary text-primary-foreground">
+            <thead className="bg-[#D81B60] text-primary-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-bold border-r-[2px] border-[#111]">
                   Date From

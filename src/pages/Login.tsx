@@ -38,7 +38,7 @@ export default function Login() {
     <div className="min-h-screen bg-background flex items-center justify-center pt-[80px]">
       <Card className="w-full max-w-sm p-6 border-[2 px] border-[#333] shadow-lg rounded-xl">
         <div className="flex justify-center mb-5">
-          <div className="bg-primary p-3 border border-[#333] rounded-md shadow">
+          <div className="bg-[#D81B60] p-3 border border-[#333] rounded-md shadow">
             <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Link
               to="/signup"
-              className="text-primary font-semibold hover:underline"
+              className="text-[#D81B60] font-semibold hover:underline"
             >
               Sign up
             </Link>

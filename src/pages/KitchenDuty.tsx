@@ -142,7 +142,7 @@ export default function KitchenDuty() {
 
           {/* DARK ORANGE BUTTON */}
           <Button
-            className="w-full bg-orange-600 text-white font-semibold rounded-xl py-7 text-xl hover:bg-orange-600"
+            className="w-full bg-[#D81B60] text-white font-semibold rounded-xl py-7 text-xl hover:bg-[#C2185B] hover:shadow-lg"
             disabled={loading || todayMarked}
             onClick={handleConfirm}
           >

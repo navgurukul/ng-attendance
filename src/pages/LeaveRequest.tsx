@@ -214,7 +214,7 @@ export default function LeaveRequest() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="max-w-md mx-auto p-4 md:p-6 border-[2px] border-[#111] shadow-md bg-card hover:shadow-lg rounded-xl transition-all">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary p-2 border-[3px] border-foreground">
+              <div className="bg-[#D81B60] p-2 border-[3px] border-foreground">
                 <CalendarIcon className="h-6 w-6 text-primary-foreground" />
               </div>
               <h2 className="text-xl md:text-2xl font-bold">Request Leave</h2>

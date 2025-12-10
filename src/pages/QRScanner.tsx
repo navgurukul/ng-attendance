@@ -214,9 +214,9 @@ export default function QRScanner() {
             )
           ) : (
             <div className="text-center py-8">
-              <div className="w-24 h-24 mx-auto bg-primary border-[2px] border-foreground flex items-center justify-center mb-4">
+              <div className="w-24 h-24 mx-auto bg-[#D81B60] border-[2px] border-foreground flex items-center justify-center mb-4">
                 <svg
-                  className="h-16 w-16 text-primary-foreground"
+                  className="h-16 w-16 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -224,7 +224,7 @@ export default function QRScanner() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-xl font-bold text-primary">Attendance Marked!</p>
+              <p className="text-xl font-bold text-[#D81B60]">Attendance Marked!</p>
             </div>
           )}
         </Card>

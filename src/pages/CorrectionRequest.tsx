@@ -179,7 +179,7 @@ export default function CorrectionRequestForm() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="p-6 border-[2px] border-[#111] shadow-lg rounded-xl bg-card hover:shadow-xl transition-all max-w-xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary p-2 border-[3px] border-foreground rounded">
+              <div className="bg-[#D81B60] p-2 border-[3px] border-foreground rounded">
                 <FileEdit className="h-6 w-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl font-bold">

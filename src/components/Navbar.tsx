@@ -258,7 +258,7 @@ export const Navbar = ({
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/Anish.png" alt="Logo" className="h-16 w-16" />
+            <img src="/Anish_logo.png" alt="Logo" className="h-16 w-16" />
             <span className="text-2xl font-bold">Smart Attendance</span>
           </Link>
           <div className="hidden md:flex items-center gap-4">
