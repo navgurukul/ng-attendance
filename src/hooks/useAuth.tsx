@@ -146,8 +146,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 🔥 One redirect URL that works for both hosted & localhost
-  const redirectTo = `${window.location.origin}/`;
+  // 🔥 One redirect URL that works for localhost + AWS hosted URL
+  const redirectTo = `${window.location.origin}/auth/callback`;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
-  // 🔥 FIXED: SignIn supports redirectTo
+  // 🔥 LOGIN redirect supported
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -202,13 +202,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  // 🔥 FIXED: SignUp supports redirectTo (email confirmation)
+  // 🔥 SIGN UP email confirmation redirect fixed
   const signUp = async (email: string, password: string, fullName: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectTo,
+        emailRedirectTo: redirectTo, // 👈 IMPORTANT FIX
         data: {
           full_name: fullName,
         },
@@ -220,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-    } catch (error) {
+    } catch {
       console.log('Clearing local session');
     }
 
