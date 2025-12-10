@@ -327,7 +327,7 @@ export default function StudentRecords() {
         <Card className="p-6 border-[2px] border-[#111] shadow-brutal bg-card">
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-primary p-2 border-[2px] border-[#111]">
+            <div className="bg-[#D81B60] p-2 border-[2px] border-[#111]">
               <Users className="h-6 w-6 text-primary-foreground" />
             </div>
             <h2 className="text-2xl font-bold">All Students</h2>
@@ -383,7 +383,7 @@ export default function StudentRecords() {
             <>
               <div className="overflow-x-auto border-[2px] border-[#111]">
                 <table className="w-full">
-                  <thead className="bg-primary text-primary-foreground">
+                  <thead className="bg-[#D81B60] text-primary-foreground">
                     <tr>
                       <th className="px-4 py-3 text-left font-bold border-b-[2px] border-r-[2px] border-[#111]">Name</th>
                       <th className="px-4 py-3 text-left font-bold border-b-[2px] border-r-[2px] border-[#111]">Roll No</th>

@@ -230,23 +230,23 @@ export default function ViewHistory() {
           View Attendance Reports History
         </h1>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
-          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-green-500 text-background hover:shadow-lg rounded-xl transition-all">
+          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-green-300 text-background hover:shadow-lg rounded-xl transition-all">
             <div className="text-3xl font-bold mb-1">{stats.present}</div>
             <div className="text-sm text-background">Days Present</div>
           </Card>
-          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-primary text-background hover:shadow-lg rounded-xl transition-all">
+          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-orange-300 text-background hover:shadow-lg rounded-xl transition-all">
             <div className="text-3xl font-bold mb-1">{stats.kitchenDuty}</div>
             <div className="text-sm text-background">Kitchen Duty</div>
           </Card>
-          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-red-500 text-background hover:shadow-lg rounded-xl transition-all">
+          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-red-300 text-background hover:shadow-lg rounded-xl transition-all">
             <div className="text-3xl font-bold mb-1">{stats.absent}</div>
             <div className="text-sm text-background">Days Absent</div>
           </Card>
-          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-blue-500 text-background hover:shadow-lg rounded-xl transition-all">
+          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md bg-blue-300 text-background hover:shadow-lg rounded-xl transition-all">
             <div className="text-3xl font-bold mb-1">{stats.leaves}</div>
             <div className="text-sm text-background">Leaves Taken</div>
           </Card>
-          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md  text-primary-foreground bg-gray-500 hover:shadow-lg rounded-xl transition-all">
+          <Card className="p-6 h-40  border-[1px] border-foreground shadow-md  text-primary-foreground bg-gray-300 hover:shadow-lg rounded-xl transition-all">
             <div className="text-3xl font-bold mb-1">{stats.percentage}%</div>
             <div className="text-sm">Attendance Rate</div>
           </Card>

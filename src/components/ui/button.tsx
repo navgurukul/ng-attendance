@@ -15,13 +15,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: `
-          bg-primary text-primary-foreground 
-          border-[2px] border-[#222]
-          shadow-[4px_4px_0_#d3d3d3]
-          hover:shadow-[8px_8px_0_#d3d3d3]
-          hover:translate-y-[-2px]
-          hover:bg-[hsl(20,95%,45%)]
-          transition-all
+          bg-[#D81B60] text-white
+   border-[2px] border-[#222]
+   shadow-[4px_4px_0_#d3d3d3]
+   hover:shadow-[8px_8px_0_#d3d3d3]
+   hover:translate-y-[-2px]
+-  hover:bg-[#D81B60]
++  hover:bg-[#C2185B]
+   transition-all
         `,
 
         outline: `
@@ -52,10 +53,10 @@ const buttonVariants = cva(
           border-none shadow-none 
           hover:bg-muted
         `,
-        
+
         link: `
           border-none shadow-none 
-          text-primary underline-offset-4 hover:underline
+          text-[#D81B60] underline-offset-4 hover:underline
         `,
       },
 
