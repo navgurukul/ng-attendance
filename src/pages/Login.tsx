@@ -25,7 +25,6 @@ export default function Login() {
       setLoading(false);
       return;
     }
-
     const { error } = await signIn(email, password);
 
     if (error) toast.error(error.message || "Failed to log in");
