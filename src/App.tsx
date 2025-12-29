@@ -21,30 +21,45 @@ import PendingLeaveRequests from "./pages/PendingLeaveRequests";
 import AttendanceCorrections from "./pages/AttendanceCorrections";
 import QRCodeGenerator from "./pages/QRCodeGenerator";
 import StudentRecords from "./pages/StudentRecords";
-// import LifecycleTracker from "./pages/LifecycleTracker";
+import LifecycleTracker from "./pages/LifecycleTracker";
 import ReportsAndDownloads from "./pages/Document";
-// import StudentTrackingForm from "./pages/StudentTracking";
+import StudentTrackingForm from "./pages/StudentTracking";
 
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'admin' | 'student' }) {
-  const { user, role, loading } = useAuth();
+// function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'admin' | 'student' }) {
+//   const { user, role, loading } = useAuth();
+
+//   if (loading) {
+//     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+//   }
+
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   if (requiredRole && role !== requiredRole) {
+//     return <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace />;
+//   }
+
+//   return <>{children}</>;
+// }
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && role !== requiredRole) {
-    return <Navigate to={role === 'admin' ? '/admin' : '/dashboard'} replace />;
-  }
-
   return <>{children}</>;
 }
+
 
 function AppRoutes() {
   const { user, role, signOut } = useAuth();
@@ -115,14 +130,14 @@ function AppRoutes() {
           }
         />
 
-        {/* <Route
+        <Route
           path="/student/tracking"
           element={
             <ProtectedRoute requiredRole="student">
               <StudentTrackingForm />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route
           path="/admin/student-report/:studentId"
@@ -168,14 +183,14 @@ function AppRoutes() {
           }
         />
 
-        {/* <Route
+        <Route
           path="/admin/tracking"
           element={
             <ProtectedRoute requiredRole="admin">
               <LifecycleTracker />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route
           path="/admin/qr-generator"

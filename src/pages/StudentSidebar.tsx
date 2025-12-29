@@ -14,7 +14,7 @@ const menuItems = [
     { name: "Kitchen Duty", icon: ChefHat, path: "/student/kitchen-duty" },
     { name: "Leave Request", icon: CalendarIcon, path: "/student/leave" },
     { name: "Correction Request", icon: Pencil, path: "/student/correction" },
-    // { name: "Student Tracking", icon: Target, path: "/student/tracking" },
+    { name: "Student Tracking", icon: Target, path: "/student/tracking" },
     { name: "View History", icon: History, path: "/student/view-history" },
 ];
 
