@@ -14,7 +14,7 @@ const menuItems = [
     { name: "QR Generator", icon: QrCode, path: "/admin/qr-generator" },
     { name: "Leave Requests", icon: CalendarIcon, path: "/admin/leave" },
     { name: "Correction Requests", icon: Pencil, path: "/admin/correction" },
-    // { name: "Life Cycle Tracking", icon: Target, path: "/admin/tracking" },
+    { name: "Life Cycle Tracking", icon: Target, path: "/admin/tracking" },
     { name: "Students Records", icon: History, path: "/admin/view-history" },
     { name: "Document", icon: BookAIcon, path: "/admin/document" },
 ];
